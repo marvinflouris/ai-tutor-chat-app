@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gnosis by Zoe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ─── RESET + TOKENS ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  /* Grey-green canvas — calm, peaceful, easy on the eyes */
+  --ink:   #131714;   /* main canvas background */
+  --ink1:  #181d1a;   /* sidebar background */
+  --ink2:  #1d2320;   /* slightly lifted surface */
+  --ink3:  #232a26;   /* hover / active states */
+  --ink4:  #0f1310;   /* deepest (input dock) */
+
+  /* Green accents — unchanged from base */
+  --moss:  #5a8a5a;
+  --moss2: #3d6b3d;
+  --moss3: #264426;
+  --moss4: #162616;
+  --leaf:  #8dc88d;
+  --leaf2: #b5d9b5;
+  --leaf3: #d4ebd4;
+
+  /* Text */
+  --fg:    #e4ebe4;   /* primary — slightly warmer, not pure white */
+  --fg2:   #96a896;
+  --fg3:   #5a6e5a;
+  --fg4:   #3d4e3d;
+
+  /* Borders */
+  --bd:    #222d24;
+  --bd2:   #2c3830;
+
+  /* Fonts */
+  --sans:  'Inter', system-ui, sans-serif;
+  --serif: 'EB Garamond', Georgia, serif;
+
+  /* Sidebar widths */
+  --sb-full:      256px;
+  --sb-collapsed: 52px;
+}
+
+body {
+  background: var(--ink);
+  font-family: var(--sans);
+  color: var(--fg);
+  overflow: hidden;
+  height: 100vh;
+  font-size: 15px;
+}
+
+/* ─── SPLASH ──────────────────────────────────────────────────────────────── */
+#splash {
+  position: fixed; inset: 0; background: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 1000; transition: opacity 0.8s ease;
+}
+#splash.fade-out { opacity: 0; pointer-events: none; }
+
+.splash-letters { display: flex; align-items: baseline; gap: 1px; }
+.splash-letter {
+  font-family: var(--serif); font-size: 84px; font-weight: 400; line-height: 1;
+  opacity: 0; transform: translateY(32px) scale(0.88);
+  transition: opacity 0.38s cubic-bezier(.22,.68,0,1.2),
+              transform 0.38s cubic-bezier(.22,.68,0,1.2);
+}
+.splash-letter.in { opacity: 1; transform: translateY(0) scale(1); }
+.splash-letters.explode { animation: explode 0.75s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes explode {
+  0%   { transform: scale(1);    opacity: 1; }
+  60%  { transform: scale(1.38); opacity: 0.55; }
+  100% { transform: scale(2.6);  opacity: 0; }
+}
+.splash-byline {
+  font-size: 13px; color: var(--fg3); font-weight: 400; letter-spacing: 0.22em;
+  margin-top: 18px; opacity: 0; transition: opacity 0.5s ease;
+  text-transform: uppercase;
+}
+.splash-byline.in { opacity: 1; }
+.splash-progress-wrap {
+  position: absolute; bottom: 72px; left: 50%; transform: translateX(-50%); width: 140px;
+}
+.splash-track { height: 1.5px; background: var(--bd2); border-radius: 2px; overflow: hidden; }
+.splash-fill  { height: 100%; width: 0%; background: var(--leaf); border-radius: 2px; transition: width 0.06s linear; }
+
+/* ─── APP SHELL ───────────────────────────────────────────────────────────── */
+#app { display: flex; height: 100vh; opacity: 0; transition: opacity 0.7s ease 0.1s; }
+#app.show { opacity: 1; }
+
+/* ─── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sb-full);
+  background: var(--ink1);
+  border-right: 1px solid var(--bd);
+  display: flex; flex-direction: column; flex-shrink: 0;
+  transition: width 0.28s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+.sidebar.collapsed { width: var(--sb-collapsed); }
+
+/* ── Sidebar top: toggle + brand ── */
+.sb-toprow {
+  display: flex; align-items: center;
+  padding: 14px 12px 10px;
+  border-bottom: 1px solid var(--bd);
+  gap: 10px;
+  flex-shrink: 0;
+}
+.sb-toggle {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: transparent; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg3); flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.sb-toggle:hover { background: var(--ink3); color: var(--fg); }
+.sb-toggle svg { width: 16px; height: 16px; }
+
+.brand-area {
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.18s ease;
+  white-space: nowrap;
+}
+.sidebar.collapsed .brand-area { opacity: 0; pointer-events: none; }
+.brand-name { font-family: var(--serif); font-size: 20px; color: var(--leaf); font-weight: 400; letter-spacing: -0.01em; }
+.brand-sub  { font-size: 10px; color: var(--fg3); margin-top: 3px; letter-spacing: 0.04em; }
+
+/* ── Nav section ── */
+.nav-section {
+  padding: 8px 0; flex: 1; overflow-y: auto; overflow-x: hidden;
+  min-height: 0;
+}
+.nav-section::-webkit-scrollbar { width: 3px; }
+.nav-section::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+.nav-label {
+  font-size: 10px; color: var(--fg3); letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 10px 16px 4px;
+  white-space: nowrap; overflow: hidden;
+  opacity: 1; transition: opacity 0.15s;
+}
+.sidebar.collapsed .nav-label { opacity: 0; height: 0; padding: 0; }
+
+.nav-item {
+  padding: 8px 12px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; border-left: 2.5px solid transparent;
+  transition: background 0.13s, border-color 0.13s;
+  min-height: 38px;
+}
+.nav-item:hover { background: var(--ink3); }
+.nav-item.active { background: rgba(93,138,93,0.12); border-left-color: var(--moss); }
+
+/* Icon in nav — always visible */
+.nav-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 7px; background: transparent;
+  transition: background 0.15s;
+  color: var(--fg3);
+}
+.nav-item:hover .nav-icon  { color: var(--fg2); }
+.nav-item.active .nav-icon { color: var(--leaf); }
+.nav-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Text label in nav — hides when collapsed */
+.nav-text-wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  flex: 1; overflow: hidden;
+  opacity: 1; transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.sidebar.collapsed .nav-text-wrap { opacity: 0; width: 0; }
+
+.nav-name   { font-size: 13px; color: var(--fg3); font-weight: 400; }
+.nav-item.active .nav-name { color: var(--fg); font-weight: 500; }
+.nav-badge  { font-size: 9px; color: var(--fg3); background: var(--ink3); padding: 1px 6px; border-radius: 8px; flex-shrink: 0; }
+.nav-item.active .nav-badge { color: var(--leaf); }
+
+.nav-sep { height: 1px; background: var(--bd); margin: 4px 12px; }
+
+/* ── Recent sessions skeleton ── */
+.recent-skeleton {
+  height: 8px; background: var(--ink3); border-radius: 3px;
+  margin: 6px 16px;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:.25} 50%{opacity:.6} }
+
+/* ── Sidebar footer: socratic toggle ── */
+.sidebar-foot {
+  padding: 12px 12px;
+  border-top: 1px solid var(--bd);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.soc-row { display: flex; align-items: center; gap: 10px; min-height: 38px; }
+.soc-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg3);
+}
+.soc-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.soc-label { flex: 1; overflow: hidden; opacity: 1; transition: opacity 0.15s; white-space: nowrap; }
+.sidebar.collapsed .soc-label { opacity: 0; width: 0; }
+.soc-name { font-size: 12px; color: var(--fg2); font-weight: 500; }
+.soc-desc { font-size: 10px; color: var(--fg3); margin-top: 2px; }
+.soc-toggle-wrap { flex-shrink: 0; overflow: hidden; opacity: 1; transition: opacity 0.15s; }
+.sidebar.collapsed .soc-toggle-wrap { opacity: 0; width: 0; }
+.toggle   { width: 36px; height: 20px; border-radius: 10px; cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+.toggle.on  { background: var(--moss2); }
+.toggle.off { background: var(--ink3); }
+.toggle::after { content:''; width:16px; height:16px; border-radius:50%; background:var(--leaf2); position:absolute; top:2px; transition:right .2s; }
+.toggle.on::after  { right: 2px; }
+.toggle.off::after { right: 18px; }
+
+/* ─── MAIN COLUMN ─────────────────────────────────────────────────────────── */
+.main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--ink); }
+
+/* ── Topbar ── */
+.topbar {
+  height: 52px; border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; padding: 0 24px;
+  justify-content: space-between;
+  background: var(--ink1);
+  flex-shrink: 0;
+}
+.t-title { font-size: 14px; color: var(--fg); font-weight: 500; }
+.t-meta  { font-size: 11px; color: var(--fg3); margin-top: 1px; }
+.topbar-right  { display: flex; align-items: center; gap: 8px; }
+.source-chips  { display: flex; align-items: center; gap: 6px; }
+.source-chip   {
+  font-size: 10px; padding: 3px 10px; border-radius: 12px;
+  border: 1px solid var(--moss3); color: var(--moss); background: var(--moss4);
+  white-space: nowrap; font-weight: 500;
+}
+.add-doc-btn   {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid var(--bd2); background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--fg3); font-size: 18px; line-height: 1;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.add-doc-btn:hover { border-color: var(--moss); color: var(--leaf); background: var(--ink3); }
+
+/* ─── MESSAGES FEED ───────────────────────────────────────────────────────── */
+.messages {
+  flex: 1; overflow-y: auto;
+  padding: 40px 0 24px;
+  display: flex; flex-direction: column; gap: 0;
+  scroll-behavior: smooth;
+}
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+/* ── Shared message row ── */
+.msg-row {
+  width: 100%; max-width: 760px;
+  margin: 0 auto; padding: 6px 24px;
+}
+
+/* ── User message — right aligned, subtle container ── */
+.msg-user {
+  display: flex; justify-content: flex-end;
+  animation: fade-in-up 0.2s ease;
+}
+.user-bubble {
+  /* Not a coloured bubble — a subtle dark right-side container */
+  background: var(--ink2);
+  border: 1px solid var(--bd2);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.65;
+  padding: 10px 16px;
+  border-radius: 16px 16px 3px 16px;
+  max-width: 72%;
+  word-break: break-word;
+}
+@keyframes fade-in-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* ── AI message — flowing text, no bubble ── */
+.msg-ai {
+  display: flex; gap: 14px; align-items: flex-start;
+  animation: fade-in-up 0.25s ease;
+}
+.ai-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--moss3); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; margin-top: 2px;
+}
+.ai-avatar svg { width: 12px; height: 12px; fill: var(--moss); }
+.ai-body { flex: 1; min-width: 0; }
+
+/* AI text — no background bubble, just flowing serif text on the canvas */
+.ai-text {
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.82;
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+  /* No background, no border, no padding box — text flows on canvas */
+}
+
+/* Paragraph spacing inside ai-text */
+.ai-text p { margin-bottom: 1em; }
+.ai-text p:last-child { margin-bottom: 0; }
+
+/* ── Typing dots ── */
+.typing-dots { display:flex; gap:5px; align-items:center; padding:4px 0; }
+.typing-dots span {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--fg3);
+  animation: pulse-dot 1.4s infinite;
+}
+.typing-dots span:nth-child(2){animation-delay:.18s}
+.typing-dots span:nth-child(3){animation-delay:.36s}
+@keyframes pulse-dot{0%,80%,100%{opacity:.2}40%{opacity:.8}}
+
+/* Blinking typewriter cursor */
+.typewriter-cursor::after {
+  content: '|';
+  animation: blink .6s step-end infinite;
+  color: var(--moss);
+  font-weight: 300;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ─── SOURCE CARDS ────────────────────────────────────────────────────────── */
+.source-cards { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.source-card  {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: var(--ink2); border: 1px solid var(--bd);
+  padding: 7px 11px; border-radius: 10px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+  max-width: 260px;
+}
+.source-card:hover { border-color: var(--moss3); background: var(--ink3); }
+.source-card.has-images { border-color: rgba(93,138,93,0.3); }
+.source-spine { width: 3px; height: 28px; background: var(--moss2); border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+.source-info  {}
+.source-title { font-size: 11px; color: var(--fg); font-weight: 500; }
+.source-loc   { font-size: 10px; color: var(--fg3); margin-top: 1px; }
+.source-img-badge {
+  display: inline-flex; align-items: center; gap: 3px; margin-top: 3px;
+  font-size: 9px; color: var(--moss); background: var(--moss4);
+  border: 1px solid var(--moss3); padding: 1px 6px; border-radius: 7px;
+}
+
+/* ─── FIGURE STRIP ────────────────────────────────────────────────────────── */
+.figures-strip { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.figure-thumb-wrap {
+  position: relative; cursor: pointer; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--bd); transition: border-color .15s; background: var(--ink2);
+}
+.figure-thumb-wrap:hover { border-color: var(--moss); }
+.figure-thumb { display: block; width: auto; height: 110px; max-width: 200px; object-fit: cover; border-radius: 7px; }
+.figure-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(11,13,11,0.82); font-size: 9px; color: var(--leaf2);
+  padding: 3px 7px; text-align: center;
+}
+
+/* ─── LIGHTBOX ────────────────────────────────────────────────────────────── */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 800;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  backdrop-filter: blur(4px);
+}
+.lightbox.open { opacity: 1; pointer-events: all; }
+.lightbox-img  { max-width: 88vw; max-height: 84vh; border-radius: 8px; border: 1px solid var(--bd2); }
+.lightbox-close {
+  position: absolute; top: 24px; right: 28px; width: 36px; height: 36px;
+  border-radius: 50%; background: var(--ink2); border: 1px solid var(--bd2);
+  color: var(--fg3); font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: color .15s;
+}
+.lightbox-close:hover { color: var(--fg); }
+.lightbox-caption {
+  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; color: var(--fg3); background: var(--ink2);
+  border: 1px solid var(--bd2); padding: 5px 16px; border-radius: 20px; white-space: nowrap;
+}
+
+/* ─── SOCRATIC PROBE BOX ──────────────────────────────────────────────────── */
+.probe-box {
+  margin-top: 12px; background: var(--ink2); border-radius: 10px;
+  border: 1px solid var(--bd); padding: 11px 15px; display: flex; gap: 10px;
+}
+.probe-icon { width:20px; height:20px; border-radius:50%; background:var(--moss4); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+.probe-icon svg { width:10px; height:10px; fill:var(--leaf); }
+.probe-label { font-size:10px; color:var(--moss); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; font-weight:600; }
+.probe-q     { font-size:13px; color:var(--fg2); line-height:1.6; font-family: var(--serif); }
+
+/* ─── CACHE BADGE ─────────────────────────────────────────────────────────── */
+.cache-badge {
+  display:inline-flex; align-items:center; gap:4px; font-size:10px;
+  color:var(--moss); background:var(--moss4); border:1px solid var(--moss3);
+  padding:2px 8px; border-radius:9px; margin-top:8px;
+}
+
+/* ─── INPUT DOCK ──────────────────────────────────────────────────────────── */
+.input-dock {
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--bd);
+  background: var(--ink1);
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* Centered input container — max-width like Claude's */
+.input-inner {
+  width: 100%; max-width: 720px;
+  background: var(--ink2);
+  border: 1px solid var(--bd2);
+  border-radius: 14px;
+  transition: border-color .2s, box-shadow .2s;
+  overflow: hidden;
+}
+.input-inner:focus-within {
+  border-color: var(--moss3);
+  box-shadow: 0 0 0 3px rgba(38,68,38,0.25);
+}
+
+.input-field {
+  display: block; width: 100%;
+  background: transparent; border: none; outline: none;
+  color: var(--fg);
+  font-family: var(--sans); font-size: 14.5px;
+  line-height: 1.6;
+  padding: 14px 18px 8px;
+  resize: none;
+  min-height: 52px;
+  max-height: 220px;   /* ~6 lines before scroll */
+  overflow-y: auto;
+  transition: min-height .15s ease;
+}
+.input-field::placeholder { color: var(--fg4); }
+.input-field::-webkit-scrollbar { width: 3px; }
+.input-field::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+/* Input bottom row: send button + hint */
+.input-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px 10px;
+}
+.input-hint { font-size: 10px; color: var(--fg4); letter-spacing: 0.04em; }
+.send-btn {
+  width: 34px; height: 34px;
+  background: var(--moss2); border-radius: 9px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .1s, opacity .15s;
+}
+.send-btn:hover    { background: var(--moss); transform: scale(1.05); }
+.send-btn:active   { transform: scale(0.97); }
+.send-btn:disabled { background: var(--ink3); opacity: 0.5; cursor: not-allowed; transform: none; }
+.send-btn svg      { width: 15px; height: 15px; fill: var(--fg); }
+
+/* ─── DOCUMENT PICKER MODAL ───────────────────────────────────────────────── */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:500;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .2s ease;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal-box {
+  background:var(--ink1); border:1px solid var(--bd2); border-radius:16px;
+  width:440px; overflow:hidden;
+  transform:scale(0.94) translateY(12px);
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.modal-overlay.open .modal-box { transform:scale(1) translateY(0); }
+.modal-header {
+  padding:18px 22px 14px; border-bottom:1px solid var(--bd);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.modal-title  { font-size:14px; color:var(--fg); font-weight:500; }
+.modal-sub    { font-size:11px; color:var(--fg3); margin-top:2px; }
+.modal-close  {
+  width:28px; height:28px; border-radius:50%; border:1px solid var(--bd);
+  background:transparent; color:var(--fg3); cursor:pointer; font-size:18px;
+  display:flex; align-items:center; justify-content:center; transition:color .15s;
+}
+.modal-close:hover { color:var(--fg); }
+.modal-body { padding:16px 22px 20px; display:flex; flex-direction:column; gap:10px; }
+.doc-card {
+  display:flex; align-items:center; gap:14px; padding:12px 14px;
+  background:var(--ink2); border:1px solid var(--bd); border-radius:12px;
+  cursor:pointer; transition:border-color .15s, background .15s;
+}
+.doc-card:hover { border-color: var(--moss3); background: var(--ink3); }
+.doc-card.active-doc { border-color: var(--moss2); }
+.doc-cover {
+  width:36px; height:46px; background:var(--moss4); border-radius:4px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.doc-cover svg { width:18px; height:18px; fill:var(--moss); }
+.doc-name    { font-size:13px; color:var(--fg); font-weight:500; }
+.doc-edition { font-size:11px; color:var(--fg3); margin-top:2px; }
+.doc-desc    { font-size:11px; color:var(--fg3); margin-top:3px; line-height:1.5; }
+.doc-check   {
+  margin-left:auto; width:18px; height:18px; border-radius:50%; background:var(--moss2);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .15s; flex-shrink:0;
+}
+.doc-card.active-doc .doc-check { opacity:1; }
+.doc-check svg { width:10px; height:10px; fill:var(--leaf2); }
+.empty-state { text-align:center; padding:48px 24px; color:var(--fg3); font-size:13px; }
+</style>
+</head>
+<body>
+
+<!-- ─── SPLASH ─────────────────────────────────────────────────────────────── -->
+<div id="splash">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="splash-letters" id="splashLetters">
+      <span class="splash-letter" style="color:#d4ebd4">G</span>
+      <span class="splash-letter" style="color:#b5d9b5">n</span>
+      <span class="splash-letter" style="color:#8dc88d">o</span>
+      <span class="splash-letter" style="color:#6db86d">s</span>
+      <span class="splash-letter" style="color:#5a8a5a">i</span>
+      <span class="splash-letter" style="color:#3d6b3d">s</span>
+    </div>
+    <div class="splash-byline" id="splashByline">Study Intelligence</div>
+  </div>
+  <div class="splash-progress-wrap">
+    <div class="splash-track"><div class="splash-fill" id="splashFill"></div></div>
+  </div>
+</div>
+
+<!-- ─── APP ────────────────────────────────────────────────────────────────── -->
+<div id="app">
+
+  <!-- ════ SIDEBAR ════ -->
+  <div class="sidebar" id="sidebar">
+
+    <!-- Top row: hamburger toggle + brand -->
+    <div class="sb-toprow">
+      <button class="sb-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+        <!-- Hamburger icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <div class="brand-area">
+        <div class="brand-name">Gnosis</div>
+        <div class="brand-sub">by Zoe · Study Intelligence</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="nav-section">
+      <div class="nav-label">Subject</div>
+
+      <!-- Biology nav item -->
+      <div class="nav-item active">
+        <div class="nav-icon">
+          <!-- Book / subject icon -->
+          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        </div>
+        <div class="nav-text-wrap">
+          <span class="nav-name">Biology</span>
+          <span class="nav-badge">Campbell</span>
+        </div>
+      </div>
+
+      <div class="nav-sep" style="margin-top:8px"></div>
+      <div class="nav-label">Recent sessions</div>
+
+      <div id="recentList">
+        <!-- Each session rendered as a nav-item by JS -->
+        <div class="recent-skeleton" style="width:80%"></div>
+        <div class="recent-skeleton" style="width:60%"></div>
+        <div class="recent-skeleton" style="width:72%"></div>
+      </div>
+    </div>
+
+    <!-- Footer: Socratic toggle -->
+    <div class="sidebar-foot">
+      <div class="soc-row">
+        <!-- Icon always visible -->
+        <div class="soc-icon">
+          <!-- Brain / socratic icon -->
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        </div>
+        <div class="soc-label">
+          <div class="soc-name">Socratic assist</div>
+          <div class="soc-desc" id="socDesc">Guided questioning on</div>
+        </div>
+        <div class="soc-toggle-wrap">
+          <div class="toggle on" id="socToggle" onclick="toggleSocratic()"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- ════ MAIN CHAT COLUMN ════ -->
+  <div class="main-col">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <div class="t-title" id="topTitle">Campbell Biology</div>
+        <div class="t-meta"  id="topMeta">Loading sources…</div>
+      </div>
+      <div class="topbar-right">
+        <div class="source-chips">
+          <div class="source-chip" id="activeDocChip">Campbell Biology</div>
+        </div>
+        <button class="add-doc-btn" onclick="openDocModal()" title="Add reference document">+</button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+      <!-- Welcome message -->
+      <div class="msg-row">
+        <div class="msg-ai">
+          <div class="ai-avatar"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="ai-body">
+            <div class="ai-text" style="font-family:var(--sans);font-size:14px;line-height:1.7">
+              Hello — I'm Gnosis, your personal biology tutor. I answer questions grounded in <strong style="color:var(--leaf2);font-weight:500">Campbell Biology 12th Edition</strong>, citing the exact chapter and page for every fact.<br><br>
+              Where I have an extracted figure, it will appear below the source card so you can see the diagram alongside the explanation. Ask me anything — osmosis, cell signalling, genetics, evolution.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input dock — centered, expandable -->
+    <div class="input-dock">
+      <div class="input-inner" id="inputInner">
+        <textarea
+          class="input-field"
+          id="inputField"
+          placeholder="Ask anything from Campbell Biology…"
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <div class="input-bottom">
+          <span class="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</span>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-col -->
+
+</div><!-- /app -->
+
+<!-- ─── DOCUMENT MODAL ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="docModal" onclick="handleModalClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Available references</div>
+        <div class="modal-sub">Select a document to search from</div>
+      </div>
+      <button class="modal-close" onclick="closeDocModal()">×</button>
+    </div>
+    <div class="modal-body" id="docList">
+      <div class="empty-state">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── IMAGE LIGHTBOX ──────────────────────────────────────────────────────── -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<script>
+/* ─── CONFIG ─────────────────────────────────────────────────────────────── */
+const API_BASE = 'http://127.0.0.1:8000';
+
+/* ─── STATE ──────────────────────────────────────────────────────────────── */
+const state = {
+  sessionId  : crypto.randomUUID(),
+  history    : [],
+  socratic   : true,
+  loading    : false,
+  sidebarOpen: true,
+  activeDoc  : {
+    id       : 'campbell-biology-12e',
+    title    : 'Campbell Biology',
+    namespace: 'campbell-biology-cohere',
+  },
+  documents  : [],
+};
+
+/* ─── SPLASH ─────────────────────────────────────────────────────────────── */
+function runSplash() {
+  const letters = document.querySelectorAll('.splash-letter');
+  const byline  = document.getElementById('splashByline');
+  const fill    = document.getElementById('splashFill');
+  const splash  = document.getElementById('splash');
+  const app     = document.getElementById('app');
+
+  letters.forEach((el, i) =>
+    setTimeout(() => el.classList.add('in'), 300 + i * 130)
+  );
+  setTimeout(() => byline.classList.add('in'), 300 + letters.length * 130 + 250);
+
+  let pct = 0;
+  const bar = setInterval(() => {
+    pct = Math.min(100, pct + 2);
+    fill.style.width = pct + '%';
+    if (pct >= 100) clearInterval(bar);
+  }, 80);
+
+  setTimeout(() => {
+    document.getElementById('splashLetters').classList.add('explode');
+    byline.style.transition = 'opacity 0.5s ease';
+    byline.style.opacity    = '0';
+  }, 4200);
+
+  setTimeout(() => {
+    splash.classList.add('fade-out');
+    app.classList.add('show');
+    setTimeout(() => splash.style.display = 'none', 900);
+  }, 4800);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  runSplash();
+  setTimeout(() => { loadDocuments(); loadSessions(); }, 600);
+});
+
+/* ─── SIDEBAR TOGGLE ─────────────────────────────────────────────────────── */
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  state.sidebarOpen = !state.sidebarOpen;
+  sb.classList.toggle('collapsed', !state.sidebarOpen);
+}
+
+/* ─── SEND MESSAGE ───────────────────────────────────────────────────────── */
+async function sendMessage() {
+  const field    = document.getElementById('inputField');
+  const question = field.value.trim();
+  if (!question || state.loading) return;
+
+  field.value = '';
+  field.style.height = 'auto';
+
+  appendUserMessage(question);
+  state.history.push({ role: 'user', content: question });
+
+  const typingId = showTyping();
+  setLoading(true);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({
+        question  : question,
+        session_id: state.sessionId,
+        history   : state.history.slice(0, -1),
+        socratic  : state.socratic,
+        namespace : state.activeDoc.namespace,
+      }),
+    });
+
+    removeTyping(typingId);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    appendAIMessage(data);
+    state.history.push({ role: 'assistant', content: data.response });
+    loadSessions();
+
+  } catch (err) {
+    removeTyping(typingId);
+    appendErrorMessage(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+/* ─── MESSAGE RENDERING ──────────────────────────────────────────────────── */
+
+function appendUserMessage(text) {
+  const feed = document.getElementById('messages');
+  const row  = document.createElement('div');
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="msg-user">
+      <div class="user-bubble">${esc(text)}</div>
+    </div>`;
+  feed.appendChild(row);
+  scrollBottom();
+}
+
+function appendAIMessage(data) {
+  const feed = document.getElementById('messages');
+  const row  = document.createElement('div');
+  row.className = 'msg-row';
+
+  /* Build source cards */
+  let citationsHtml = '';
+  let figuresHtml   = '';
+
+  if (data.citations && data.citations.length > 0) {
+    const cards = data.citations.map(c => {
+      const loc = [
+        c.chapter,
+        c.concept,
+        c.section ? c.section.slice(0,40) : '',
+        c.page    ? 'p.' + c.page         : '',
+      ].filter(Boolean).join(' · ');
+
+      const imgBadge = (c.image_files && c.image_files.length > 0)
+        ? `<div class="source-img-badge">
+             <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+               <rect x="3" y="3" width="18" height="18" rx="2"/>
+               <circle cx="8.5" cy="8.5" r="1.5"/>
+               <path d="M21 15l-5-5L5 21"/>
+             </svg>
+             ${c.image_files.length} figure${c.image_files.length > 1 ? 's' : ''}
+           </div>`
+        : '';
+      return `<div class="source-card ${c.image_files && c.image_files.length ? 'has-images' : ''}">
+        <div class="source-spine"></div>
+        <div class="source-info">
+          <div class="source-title">${esc(c.title)}</div>
+          <div class="source-loc">${esc(loc)}</div>
+          ${imgBadge}
+        </div>
+      </div>`;
+    }).join('');
+    citationsHtml = `<div class="source-cards">${cards}</div>`;
+
+    /* Figure thumbnails */
+    const allImages = [];
+    data.citations.forEach(c => {
+      (c.image_files || []).forEach(url => {
+        if (!allImages.find(i => i.url === url)) {
+          allImages.push({
+            url    : `${API_BASE}${url}`,
+            caption: `${c.chapter}${c.concept ? ' · ' + c.concept : ''}${c.page ? ' · p.' + c.page : ''}`,
+            figRefs: (c.figure_refs || []).join(', '),
+          });
+        }
+      });
+    });
+
+    if (allImages.length > 0) {
+      const thumbs = allImages.slice(0, 6).map(img => `
+        <div class="figure-thumb-wrap"
+             onclick="openLightbox('${img.url}', '${esc(img.caption)}')">
+          <img class="figure-thumb" src="${img.url}" alt="${esc(img.caption)}"
+               onerror="this.closest('.figure-thumb-wrap').style.display='none'" />
+          <div class="figure-label">${esc(img.figRefs || img.caption)}</div>
+        </div>`).join('');
+      figuresHtml = `<div class="figures-strip">${thumbs}</div>`;
+    }
+  }
+
+  const cacheBadge = data.from_cache
+    ? `<div class="cache-badge">
+         <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+         </svg> From cache
+       </div>`
+    : '';
+
+  row.innerHTML = `
+    <div class="msg-ai">
+      <div class="ai-avatar">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="ai-body">
+        <div class="ai-text typewriter-cursor" id="tw-${Date.now()}"></div>
+        ${citationsHtml}
+        ${figuresHtml}
+        ${cacheBadge}
+      </div>
+    </div>`;
+
+  feed.appendChild(row);
+  scrollBottom();
+  typewriter(row.querySelector('.ai-text'), data.response);
+}
+
+function appendErrorMessage(msg) {
+  const feed = document.getElementById('messages');
+  const row  = document.createElement('div');
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="msg-ai">
+      <div class="ai-avatar"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="ai-body">
+        <div class="ai-text" style="color:#c0786a;font-family:var(--sans);font-size:13.5px">
+          Could not reach the backend: ${esc(msg)}<br>
+          <span style="color:var(--fg3);font-size:12px">
+            Make sure <code style="color:var(--leaf2)">python api.py</code> is running at ${API_BASE}
+          </span>
+        </div>
+      </div>
+    </div>`;
+  feed.appendChild(row);
+  scrollBottom();
+}
+
+/* ─── TYPEWRITER ─────────────────────────────────────────────────────────── */
+function typewriter(el, text, speed = 11) {
+  let i = 0;
+  el.classList.add('typewriter-cursor');
+  function tick() {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      scrollBottom();
+      setTimeout(tick, speed);
+    } else {
+      el.classList.remove('typewriter-cursor');
+    }
+  }
+  tick();
+}
+
+/* ─── TYPING INDICATOR ───────────────────────────────────────────────────── */
+function showTyping() {
+  const feed = document.getElementById('messages');
+  const id   = 'typing-' + Date.now();
+  const row  = document.createElement('div');
+  row.id        = id;
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="msg-ai">
+      <div class="ai-avatar"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="ai-body">
+        <div class="ai-text">
+          <div class="typing-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  feed.appendChild(row);
+  scrollBottom();
+  return id;
+}
+function removeTyping(id) { document.getElementById(id)?.remove(); }
+
+/* ─── LIGHTBOX ───────────────────────────────────────────────────────────── */
+function openLightbox(src, caption) {
+  document.getElementById('lightboxImg').src        = src;
+  document.getElementById('lightboxCaption').textContent = caption;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+/* ─── SESSIONS ───────────────────────────────────────────────────────────── */
+async function loadSessions() {
+  try {
+    const res  = await fetch(`${API_BASE}/api/sessions`);
+    const data = await res.json();
+    renderSessions(data.sessions || []);
+  } catch {
+    document.getElementById('recentList').innerHTML =
+      '<div style="padding:8px 16px;font-size:11px;color:var(--fg3)">Backend offline</div>';
+  }
+}
+
+function renderSessions(sessions) {
+  const list = document.getElementById('recentList');
+  if (!sessions.length) {
+    list.innerHTML = '<div style="padding:8px 16px;font-size:11px;color:var(--fg3)">No sessions yet</div>';
+    return;
+  }
+  list.innerHTML = sessions.slice(0, 8).map(s => `
+    <div class="nav-item ${s.id === state.sessionId ? 'active' : ''}">
+      <div class="nav-icon">
+        <!-- Clock / recent icon -->
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="nav-text-wrap">
+        <span class="nav-name" title="${esc(s.summary)}">${esc(s.summary)}</span>
+      </div>
+    </div>`).join('');
+}
+
+/* ─── DOCUMENT MODAL ─────────────────────────────────────────────────────── */
+async function loadDocuments() {
+  try {
+    const res  = await fetch(`${API_BASE}/api/documents`);
+    const data = await res.json();
+    state.documents = data.documents || [];
+  } catch {
+    state.documents = [{
+      id         : 'campbell-biology-12e',
+      title      : 'Campbell Biology',
+      subtitle   : '12th Edition',
+      description: 'Chapters 1–56',
+      namespace_cohere: 'campbell-biology-cohere',
+    }];
+  }
+  updateTopMeta();
+}
+
+function updateTopMeta() {
+  document.getElementById('topMeta').textContent = `${state.activeDoc.title} · Biology`;
+}
+
+function openDocModal() {
+  const list = document.getElementById('docList');
+  if (!state.documents.length) {
+    list.innerHTML = `<div class="empty-state">No documents indexed yet.<br>
+      <span style="font-size:10px;color:var(--fg3)">Run embed_campbell.py to add Campbell Biology.</span></div>`;
+  } else {
+    list.innerHTML = state.documents.map(doc => `
+      <div class="doc-card ${doc.id === state.activeDoc.id ? 'active-doc' : ''}"
+           onclick="selectDoc('${doc.id}')">
+        <div class="doc-cover"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+        <div style="flex:1">
+          <div class="doc-name">${esc(doc.title)}</div>
+          <div class="doc-edition">${esc(doc.subtitle || '')}</div>
+          <div class="doc-desc">${esc(doc.description || '')}</div>
+        </div>
+        <div class="doc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>`).join('');
+  }
+  document.getElementById('docModal').classList.add('open');
+}
+
+function closeDocModal() { document.getElementById('docModal').classList.remove('open'); }
+
+function handleModalClick(e) {
+  if (e.target === document.getElementById('docModal')) closeDocModal();
+}
+
+function selectDoc(docId) {
+  const doc = state.documents.find(d => d.id === docId);
+  if (!doc) return;
+  state.activeDoc = {
+    id       : doc.id,
+    title    : doc.title,
+    namespace: doc.namespace_cohere || doc.namespace_llama || 'campbell-biology-cohere',
+  };
+  document.getElementById('activeDocChip').textContent = doc.title;
+  document.getElementById('topTitle').textContent      = doc.title;
+  updateTopMeta();
+  document.querySelectorAll('.doc-card').forEach(el => el.classList.remove('active-doc'));
+  event.currentTarget.classList.add('active-doc');
+  setTimeout(closeDocModal, 380);
+}
+
+/* ─── SOCRATIC TOGGLE ────────────────────────────────────────────────────── */
+function toggleSocratic() {
+  state.socratic = !state.socratic;
+  const tog  = document.getElementById('socToggle');
+  const desc = document.getElementById('socDesc');
+  tog.classList.toggle('on',  state.socratic);
+  tog.classList.toggle('off', !state.socratic);
+  desc.textContent = state.socratic ? 'Guided questioning on' : 'Direct answers on';
+}
+
+/* ─── ARCHIVE ON UNLOAD ──────────────────────────────────────────────────── */
+async function archiveSession() {
+  if (!state.history.length) return;
+  try {
+    await fetch(`${API_BASE}/api/archive`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ session_id: state.sessionId, history: state.history }),
+    });
+  } catch {}
+}
+window.addEventListener('beforeunload', archiveSession);
+
+/* ─── UTILITIES ──────────────────────────────────────────────────────────── */
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  // Clamp between 1-row min and ~6-row max
+  el.style.height = Math.min(el.scrollHeight, 220) + 'px';
+}
+
+function setLoading(v)   { state.loading = v; document.getElementById('sendBtn').disabled = v; }
+function scrollBottom()  { const f = document.getElementById('messages'); f.scrollTop = f.scrollHeight; }
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+</script>
+</body>
+</html>

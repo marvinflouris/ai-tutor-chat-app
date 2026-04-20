@@ -1,0 +1,10 @@
+# Backend specific
+backend/venv/
+backend/.env
+backend/__pycache__/
+backend/logs/
+backend/DOCUMENTS
+backend/images/
+# General ignores
+.DS_Store
+Thumbs.db
