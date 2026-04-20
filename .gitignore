@@ -8,3 +8,6 @@ backend/images/
 # General ignores
 .DS_Store
 Thumbs.db
+
+.vscode/
+rag_storage/
