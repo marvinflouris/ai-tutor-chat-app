@@ -1,0 +1,3771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orelia Scholar</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+
+<!-- KaTeX -->
+<link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<!-- Prism -->
+<link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   BRAND FONT — Georgia serif (clean, readable, premium feel)
+   A dot-matrix / LED font will be introduced in a future session
+   once a suitable one is selected.
+═══════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:   #1c1e1b;
+  --ink1:  #161817;
+  --ink2:  #222522;
+  --ink3:  #2b2f2b;
+  --ink4:  #1a1c1a;
+
+  --moss:  #5a8a5a;  --moss2: #3d6b3d;  --moss3: #264426;  --moss4: #162616;
+  --leaf:  #8dc88d;  --leaf2: #b5d9b5;  --leaf3: #d4ebd4;
+
+  --accent-blue:   #4a9eff;
+  --accent-amber:  #e8a04a;
+  --accent-violet: #9d7fe8;
+  --accent-teal:   #4dc9a8;
+  --accent-rose:   #e87a7a;
+  --accent-orange: #e8784a;
+
+  --fg:  #dce8dc;  --fg2: #8a9e8a;  --fg3: #566056;  --fg4: #354535;
+  --bd:  #262a26;  --bd2: #2e332e;
+
+  --sans:  'Inter', system-ui, sans-serif;
+  --serif: 'TiemposText', 'Charter', 'Bitstream Charter', ui-serif, Georgia, serif;
+  --mono:  'Courier Prime', 'Fira Code', Consolas, monospace;
+  /* Brand font — Georgia serif, clean and premium */
+  --font-brand: Georgia, 'Palatino Linotype', ui-serif, serif;
+
+  --sb-w: 248px;
+  --sb-c: 52px;
+  --msg-max: 740px;
+}
+
+body { background: var(--ink); font-family: var(--sans); color: var(--fg); overflow: hidden; height: 100vh; cursor: default; }
+
+/* ── Selection: only AI responses and user-typed input ── */
+*, *::before, *::after { user-select: none; -webkit-user-select: none; }
+/* AI response text */
+.ai-text, .md-body { user-select: text; -webkit-user-select: text; }
+/* Flashcard and mode chat AI bubbles */
+.fc-msg-ai .fc-bubble, .fc-msg-ai .fc-bubble.md-body,
+.dash-mode-messages .fc-msg-ai .fc-bubble,
+.orelia-tray-msgs .fc-msg-ai .fc-bubble { user-select: text; -webkit-user-select: text; }
+/* User-typed input fields */
+textarea, input, [contenteditable] { user-select: text; -webkit-user-select: text; }
+/* User bubbles (their own messages) */
+.user-bubble .bubble-inner { user-select: text; -webkit-user-select: text; }
+
+/* ═══════════════════════════════════════════════════════
+   SPLASH
+═══════════════════════════════════════════════════════ */
+#splash {
+  position: fixed; inset: 0; background: var(--ink);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 1000; transition: opacity 0.9s ease;
+}
+#splash.fade-out { opacity: 0; pointer-events: none; }
+
+.splash-wordmark {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: clamp(54px, 10vw, 90px);
+  color: var(--fg); letter-spacing: 0.04em; line-height: 1;
+  display: flex;
+}
+.splash-char {
+  display: inline-block; opacity: 0; transform: translateY(100%);
+  transition: opacity 0.35s cubic-bezier(.4,0,.2,1),
+              transform 0.35s cubic-bezier(.4,0,.2,1);
+}
+.splash-char.in { opacity: 1; transform: translateY(0); }
+
+.splash-sub {
+  font-family: var(--sans); font-size: 12px; color: var(--fg3);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-top: 16px; opacity: 0; transition: opacity 0.7s ease;
+}
+.splash-sub.in { opacity: 1; }
+
+.splash-bar-wrap { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; overflow: hidden; }
+.splash-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, transparent, var(--leaf), var(--accent-teal), var(--leaf), transparent);
+  background-size: 300% 100%; animation: bar-move 2s linear infinite; transition: width 0.07s linear;
+}
+@keyframes bar-move { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+/* ═══════════════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   APP SHELL + GLOBAL RIBBON
+   Architecture:
+   ┌─────────────────────────────────────────────────────┐
+   │  [RIBBON - fixed, full width, height 44px]          │
+   │  [≡][⌕] │ [←][→]       (canvas area)               │
+   ├──────────┼──────────────────────────────────────────┤
+   │ SIDEBAR  │  MAIN CONTENT (chat / pages)             │
+   └──────────┴──────────────────────────────────────────┘
+   The ribbon is position:fixed, z-index 100.
+   The app body sits below it via padding-top.
+   The sidebar border is the visual separator in the ribbon.
+═══════════════════════════════════════════════════════ */
+#app {
+  display: flex; height: 100vh;
+  box-sizing: border-box;
+  opacity: 0; transition: opacity 0.7s ease 0.1s;
+  position: relative;
+}
+#app.show { opacity: 1; }
+
+
+
+/* ════════════════════════════════════════════════════════════════════
+   SIDEBAR — below ribbon, no internal toggle row anymore
+   State 1 · pinned      — width var(--sb-w), in normal flow
+   State 2 · collapsed   — width var(--sb-c), in normal flow
+   State 3 · hover-exp   — width var(--sb-w), position absolute
+════════════════════════════════════════════════════════════════════ */
+.sidebar {
+  width: var(--sb-w);
+  background: var(--ink1);
+  border-right: 1px solid var(--bd);
+  display: flex; flex-direction: column; flex-shrink: 0;
+  transition: width 0.26s cubic-bezier(.4,0,.2,1),
+              opacity 0.3s ease, box-shadow 0.26s ease;
+  overflow: hidden;
+  position: relative;
+  z-index: 20;
+}
+
+/* new-chat: sidebar stays as collapsed 52px rail */
+.app-new-chat .sidebar { /* thin rail visible */ }
+
+
+/* Collapsed: 52px icon rail */
+.sidebar.collapsed { width: var(--sb-c); }
+
+/* Hover-expanded: lifts off layout, floats over canvas */
+.sidebar.collapsed.hover-exp {
+  width: var(--sb-w);
+  position: absolute; top: 0; bottom: 0; left: 0;
+  box-shadow: 6px 0 32px rgba(0,0,0,0.55);
+}
+
+/* ── Sidebar brand text row (no internal toggle anymore) ── */
+
+
+/* ── Brand ── */
+.sb-brand-text { overflow: hidden; white-space: nowrap; opacity: 1; transition: opacity .18s ease; }
+.sidebar.collapsed .sb-brand-text { opacity: 0; pointer-events: none; }
+/* Hover-exp overrides collapsed opacity suppression */
+.sidebar.hover-exp .sb-brand-text { opacity: 1; pointer-events: auto; }
+/* ── Sidebar toggle row (hamburger + brand) ── */
+.sb-toggle-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 12px 10px; flex-shrink: 0; position: relative;
+}
+.sb-toggle {
+  width: 28px; height: 28px; border-radius: 7px; background: transparent;
+  border: none; cursor: pointer; color: var(--fg3); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s, transform .12s;
+}
+.sb-toggle:hover  { background: var(--ink3); color: var(--fg); }
+.sb-toggle:active { transform: scale(0.88); }
+.sb-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+
+
+.brand-name {
+  font-family: var(--font-brand);
+  font-size: 19px; color: var(--leaf); font-weight: 400;
+  letter-spacing: 0.05em;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.brand-scholar {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--accent-teal); letter-spacing: 0.14em; text-transform: uppercase;
+  background: rgba(77,201,168,0.1); border: 1px solid rgba(77,201,168,0.28);
+  padding: 1px 7px; border-radius: 4px; position: relative; top: -1px;
+}
+.brand-sub { font-size: 10px; color: var(--fg3); margin-top: 4px; letter-spacing: 0.04em; }
+
+/* ── Icon nav ── */
+.sb-icon-nav {
+  display: flex; flex-direction: column;
+  padding: 6px 0; flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0;
+}
+.sb-icon-nav::-webkit-scrollbar { width: 3px; }
+.sb-icon-nav::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+.sb-row {
+  display: flex; align-items: center; gap: 11px; padding: 8px 12px;
+  cursor: pointer; border-left: 2.5px solid transparent;
+  transition: background .13s, border-color .13s, transform .1s;
+  min-height: 40px; white-space: nowrap; position: relative;
+}
+.sb-row:hover { background: var(--ink3); }
+.sb-row:active { transform: scale(0.97); }
+.sb-row.active { background: rgba(93,138,93,0.1); border-left-color: var(--moss); }
+
+.sb-row-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 7px; color: var(--fg3); transition: color .13s;
+}
+.sb-row:hover .sb-row-icon { color: var(--leaf); }
+.sb-row.active .sb-row-icon { color: var(--leaf); }
+.sb-row-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.sb-row-label {
+  font-size: 13px; color: var(--fg3); flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis;
+  opacity: 1; transition: opacity .15s;
+}
+/* Collapse text labels */
+.sidebar.collapsed .sb-row-label { opacity: 0; width: 0; pointer-events: none; }
+/* Hover-exp overrides */
+.sidebar.hover-exp .sb-row-label { opacity: 1; width: auto; pointer-events: auto; }
+
+.sb-row.active .sb-row-label { color: var(--fg); }
+
+.sb-row-badge {
+  font-size: 9px; background: var(--ink3); color: var(--fg3);
+  padding: 1px 6px; border-radius: 8px; flex-shrink: 0;
+  opacity: 1; transition: opacity .15s;
+}
+.sidebar.collapsed .sb-row-badge { opacity: 0; width: 0; }
+.sidebar.hover-exp .sb-row-badge { opacity: 1; width: auto; }
+.sb-row.active .sb-row-badge { color: var(--leaf); }
+
+.sb-div { height: 1px; background: var(--bd); margin: 4px 12px; flex-shrink: 0; }
+.sb-section-label {
+  font-size: 9px; color: var(--fg3); letter-spacing: .1em; text-transform: uppercase;
+  padding: 8px 16px 4px; flex-shrink: 0; opacity: 1; transition: opacity .15s;
+}
+.sidebar.collapsed .sb-section-label { opacity: 0; height: 0; padding: 0; overflow: hidden; }
+.sidebar.hover-exp .sb-section-label { opacity: 1; height: auto; padding: 8px 16px 4px; }
+
+.sb-date-group {
+  font-size: 9px; color: var(--fg4); letter-spacing: .1em; text-transform: uppercase;
+  padding: 10px 16px 3px; flex-shrink: 0; opacity: 1; transition: opacity .15s;
+}
+.sidebar.collapsed .sb-date-group { opacity: 0; height: 0; padding: 0; overflow: hidden; }
+.sidebar.hover-exp .sb-date-group { opacity: 1; height: auto; padding: 10px 16px 3px; }
+
+.recent-skeleton { height: 9px; background: var(--ink3); border-radius: 3px; margin: 6px 16px; animation: shimmer 1.5s infinite; }
+@keyframes shimmer { 0%,100%{opacity:.25} 50%{opacity:.65} }
+
+/* ── Footer ── */
+.sb-footer {
+  flex-shrink: 0; padding: 10px 12px; border-top: 1px solid var(--bd);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.soc-row { display: flex; align-items: center; gap: 11px; min-height: 40px; }
+.soc-icon { width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--accent-violet); }
+.soc-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.soc-text { flex: 1; overflow: hidden; white-space: nowrap; opacity: 1; transition: opacity .15s; }
+.sidebar.collapsed .soc-text { opacity: 0; width: 0; pointer-events: none; }
+.sidebar.hover-exp .soc-text { opacity: 1; width: auto; pointer-events: auto; }
+.soc-name { font-size: 12px; color: var(--fg2); font-weight: 500; }
+.soc-desc { font-size: 10px; color: var(--fg3); margin-top: 1px; }
+.soc-toggle-wrap { flex-shrink: 0; opacity: 1; transition: opacity .15s; }
+.sidebar.collapsed .soc-toggle-wrap { opacity: 0; width: 0; pointer-events: none; }
+.sidebar.hover-exp .soc-toggle-wrap { opacity: 1; width: auto; pointer-events: auto; }
+.toggle { width: 36px; height: 20px; border-radius: 10px; cursor: pointer; position: relative; transition: background .2s; }
+.toggle.on  { background: var(--moss2); }
+.toggle.off { background: var(--bd2); }
+.toggle::after { content:''; width:16px; height:16px; border-radius:50%; background:var(--leaf2); position:absolute; top:2px; transition:right .2s; }
+.toggle.on::after  { right: 2px; }
+.toggle.off::after { right: 18px; }
+
+.sb-avatar-row {
+  display: flex; align-items: center; gap: 11px; min-height: 40px;
+  cursor: pointer; border-radius: 8px; padding: 0;
+  transition: background .13s, transform .1s;
+}
+.sb-avatar-row:hover { background: var(--ink3); }
+.sb-avatar-row:active { transform: scale(0.97); }
+.sb-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--moss2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--leaf3); }
+.sb-avatar-label { font-size: 12px; color: var(--fg3); overflow: hidden; white-space: nowrap; opacity: 1; transition: opacity .15s; }
+.sidebar.collapsed .sb-avatar-label { opacity: 0; width: 0; }
+.sidebar.hover-exp .sb-avatar-label { opacity: 1; width: auto; }
+
+.cit-icon-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent-teal);
+  position: absolute; top: 7px; right: 7px; opacity: 0; transition: opacity .2s;
+}
+.sb-row.has-cit .cit-icon-dot { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════
+   CITATIONS PANEL
+═══════════════════════════════════════════════════════ */
+#citPanel {
+  position: absolute; top: 0; left: var(--sb-w); bottom: 0;
+  width: 0; overflow: hidden; background: var(--ink1);
+  border-right: 0 solid var(--bd);
+  transition: width .32s cubic-bezier(.4,0,.2,1), border-right-width .32s;
+  z-index: 9; display: flex; flex-direction: column;
+}
+/* When sidebar is collapsed, citPanel anchors to its edge */
+.sidebar.collapsed ~ #citPanel { left: var(--sb-c); }
+#citPanel.open { width: 320px; border-right-width: 1px; }
+
+.cit-panel-inner { width: 320px; height: 100%; overflow-y: auto; padding: 20px 18px; display: flex; flex-direction: column; gap: 20px; }
+.cit-panel-inner::-webkit-scrollbar { width: 3px; }
+.cit-panel-inner::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+/* Panel header — includes back/close button */
+.cit-panel-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.cit-panel-title { font-size: 11px; color: var(--fg3); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+
+/* ── Shared back-to-chat button used on all sub-panels ── */
+
+
+.cit-entry { display: flex; flex-direction: column; gap: 8px; }
+.cit-info-row { display: flex; flex-direction: column; gap: 3px; }
+.cit-info-title { font-size: 12px; color: var(--fg); font-weight: 600; }
+.cit-info-loc { font-size: 11px; color: var(--fg3); line-height: 1.5; }
+.cit-info-score { font-size: 10px; color: var(--fg4); margin-top: 1px; }
+.cit-img-col { width: 100%; border-radius: 10px; overflow: hidden; background: var(--ink2); cursor: pointer; transition: opacity .15s; }
+.cit-img-col:hover { opacity: 0.88; }
+.cit-img-col img { width: 100%; display: block; object-fit: contain; max-height: 200px; background: var(--ink1); }
+.cit-img-label { font-size: 10px; color: var(--fg3); padding: 6px 10px; background: var(--ink2); line-height: 1.5; }
+.cit-no-img { font-size: 11px; color: var(--fg4); font-style: italic; }
+
+/* ═══════════════════════════════════════════════════════
+   ARTIFACTS PAGE — Session A placeholder, now with back button
+═══════════════════════════════════════════════════════ */
+#artifactsPage {
+  display: none;
+  flex: 1; flex-direction: column; min-width: 0;
+  background: var(--ink); overflow-y: auto;
+  padding: 0;
+  animation: fade-up .25s ease;
+}
+#artifactsPage.active { display: flex; }
+
+/* Top bar for sub-pages — consistent back-navigation header */
+.page-topbar {
+  height: 52px;
+  /* No border — shade difference separates from content */
+  display: flex; align-items: center; padding: 0 20px; gap: 16px;
+  background: var(--ink);   /* same as canvas — seamless */
+  flex-shrink: 0;
+}
+.page-topbar-title { font-size: 14px; color: var(--fg2); font-weight: 500; }
+
+.artifacts-body { padding: 36px 40px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; flex: 1; }
+.artifacts-header-text { }
+.artifacts-title { font-family: Georgia, ui-serif, serif; font-size: 22px; font-weight: 700; color: var(--fg); letter-spacing: -0.02em; }
+.artifacts-sub { font-size: 13px; color: var(--fg3); margin-top: 6px; }
+
+.artifacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+.artifact-card {
+  background: var(--ink2); border: 1px solid var(--bd2); border-radius: 14px;
+  padding: 20px 18px; cursor: pointer; display: flex; flex-direction: column; gap: 10px;
+  transition: border-color .15s, background .15s, transform .12s; position: relative; overflow: hidden;
+}
+.artifact-card:hover { border-color: var(--bd); background: var(--ink3); transform: translateY(-1px); }
+.artifact-card-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.artifact-card-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.artifact-card-name { font-size: 13px; color: var(--fg); font-weight: 600; }
+.artifact-card-desc { font-size: 11px; color: var(--fg3); line-height: 1.5; }
+.artifact-card-badge {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 8px;
+  background: rgba(157,127,232,0.12); color: var(--accent-violet);
+  border: 1px solid rgba(157,127,232,0.25);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN CHAT COLUMN
+═══════════════════════════════════════════════════════ */
+.main-col {
+  flex: 1; display: flex; flex-direction: column;
+  min-width: 0; background: var(--ink); position: relative;
+}
+
+/* Topbar */
+/* ── Topbar — one body with canvas, no border line ── */
+.topbar {
+  height: 52px;
+  /* No border-bottom — topbar IS the canvas, same shade */
+  display: flex; align-items: center; padding: 0 20px;
+  justify-content: flex-end;   /* chips sit on right only */
+  background: var(--ink);      /* exact canvas colour */
+  flex-shrink: 0;
+  transition: opacity .3s;
+}
+/* .main-col.chat-empty .topbar { opacity: 0; pointer-events: none; } — removed, handled by #newChatScreen overlay */
+/* t-title removed from view — kept in DOM for JS but visually hidden */
+.t-title { display: none; }
+.topbar-right { display: flex; align-items: center; gap: 6px; }
+
+/* Multi-source chips */
+.source-chips { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; max-width: 400px; overflow-x: auto; }
+.source-chips::-webkit-scrollbar { display: none; }
+.source-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; padding: 3px 10px; border-radius: 12px;
+  /* No border — shade darker than canvas */
+  border: none; color: var(--fg3);
+  background: var(--ink3); white-space: nowrap;
+  cursor: pointer; transition: background .15s, color .15s, transform .1s; font-weight: 500;
+}
+.source-chip:hover { background: #343834; color: var(--fg); }
+.source-chip:active { transform: scale(0.95); }
+.source-chip.chip-active { color: var(--leaf); background: var(--moss4); }
+.source-chip .chip-spine { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.chip-bio .chip-spine  { background: var(--accent-amber); }
+.chip-chem .chip-spine { background: var(--accent-blue); }
+.chip-phys .chip-spine { background: var(--accent-violet); }
+.chip-math .chip-spine { background: var(--accent-teal); }
+
+.chip-overflow { font-size: 10px; padding: 3px 9px; border-radius: 12px; border: none; color: var(--fg3); background: var(--ink3); white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
+.chip-overflow:hover { background: #343834; color: var(--fg); }
+
+.add-doc-btn {
+  width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--ink3);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--fg3); font-size: 18px; line-height: 1;
+  transition: background .15s, color .15s, transform .12s;
+}
+.add-doc-btn:hover { background: #343834; color: var(--leaf); }
+.add-doc-btn:active { transform: scale(0.88); }
+
+/* ── Messages ── */
+.msgs-wrap { flex: 1; position: relative; min-height: 0; overflow: hidden; }
+
+/* In new-chat state the main-col is a flex column.
+   msgs-wrap still holds the absolute overlay.
+   The centering of input+chips happens at main-col level
+   by making main-col flex with justify-content:center. */
+/* new-chat state handled by #newChatScreen fixed overlay */
+.messages {
+  position: absolute; inset: 0; overflow-y: auto;
+  padding: 32px 0 8px; display: flex; flex-direction: column; scroll-behavior: smooth;
+  transition: opacity .35s ease;
+}
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+/* .main-col.chat-empty .messages { opacity: 0; pointer-events: none; } — removed, handled by #newChatScreen overlay */
+
+.msg-group { width: 100%; max-width: var(--msg-max); margin: 0 auto; padding: 4px 28px; position: relative; }
+.msg-group + .msg-group { margin-top: 8px; }
+.msg-group.user-group { margin-top: 20px; }
+.msg-group.ai-group   { margin-top: 4px; }
+
+/* User bubble */
+.msg-user { display: flex; justify-content: flex-end; animation: slide-in-r .22s cubic-bezier(.34,1.56,.64,1); }
+@keyframes slide-in-r { from{transform:translateX(14px) scale(.96);opacity:0} to{transform:none;opacity:1} }
+.user-bubble {
+  background: var(--ink3); border: none; color: var(--fg);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6; font-weight: 400;
+  padding: 11px 16px; border-radius: 18px 18px 4px 18px;
+  max-width: 76%; word-break: break-word; position: relative;
+}
+.user-bubble.is-long .bubble-inner { max-height: 234px; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%); mask-image: linear-gradient(180deg, #000 60%, transparent 100%); }
+.user-bubble.expanded .bubble-inner { max-height: none; -webkit-mask-image: none; mask-image: none; }
+.show-more-btn { display: block; width: 100%; margin-top: 6px; background: none; border: none; cursor: pointer; font-family: var(--sans); font-size: 12px; color: var(--fg3); text-align: left; padding: 0; transition: color .15s; }
+.show-more-btn:hover { color: var(--leaf); }
+
+.msg-actions { display: flex; align-items: center; gap: 6px; margin-top: 6px; justify-content: flex-end; opacity: 0; transition: opacity .18s; pointer-events: none; }
+.msg-group:hover .msg-actions { opacity: 1; pointer-events: auto; }
+.msg-time { font-size: 11px; color: var(--fg3); margin-right: 4px; white-space: nowrap; }
+.action-btn {
+  width: 26px; height: 26px; border-radius: 6px; background: transparent;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: var(--fg4);
+  transition: background .13s, color .13s, transform .1s;
+}
+.action-btn:hover { background: var(--ink3); color: var(--fg); }
+.action-btn:active { transform: scale(0.86); }
+.action-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.copy-toast { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%); background: var(--ink3); border: none; color: var(--fg); font-size: 12px; padding: 6px 18px; border-radius: 20px; pointer-events: none; z-index: 900; opacity: 0; transition: opacity .2s; }
+.copy-toast.show { opacity: 1; }
+
+/* AI response */
+.msg-ai { display: flex; gap: 0; align-items: flex-start; animation: fade-up .25s ease; }
+@keyframes fade-up { from{transform:translateY(8px);opacity:0} to{transform:none;opacity:1} }
+.ai-avatar { display: none; }
+.ai-body   { flex: 1; min-width: 0; }
+.ai-text   { font-family: var(--serif); font-size: 1.17rem; line-height: 1.65; color: var(--fg); white-space: pre-wrap; word-break: break-word; }
+.ai-meta   { display: flex; align-items: center; gap: 8px; margin-top: 8px; opacity: 0; transition: opacity .18s; pointer-events: none; }
+.msg-group:hover .ai-meta { opacity: 1; pointer-events: auto; }
+.ai-time   { font-size: 11px; color: var(--fg3); }
+
+/* Thinking panel */
+.typing-row { display: flex; flex-direction: column; gap: 0; }
+.thinking-panel { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: var(--ink3); border: none; border-radius: 20px; margin-bottom: 10px; width: fit-content; animation: panel-in 0.3s ease; }
+@keyframes panel-in { from{opacity:0;transform:translateY(4px) scale(.97)} to{opacity:1;transform:none} }
+.typing-dots { display: flex; gap: 4px; align-items: center; }
+.typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--fg3); animation: pulse-dot 1.4s infinite; }
+.typing-dots span:nth-child(2){animation-delay:.18s} .typing-dots span:nth-child(3){animation-delay:.36s}
+@keyframes pulse-dot{0%,80%,100%{opacity:.18}40%{opacity:.9}}
+.thinking-label { font-family: var(--sans); font-size: 12px; color: var(--fg3); font-style: italic; font-weight: 300; animation: think-fade .5s ease; }
+@keyframes think-fade { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:none} }
+.response-boundary { height: 1px; background: linear-gradient(90deg, transparent, var(--bd2) 20%, var(--bd2) 80%, transparent); margin: 6px 0 12px; opacity: 1; transition: opacity .5s; }
+.response-boundary.done { opacity: 0; }
+
+.typewriter-cursor::after { content:'|'; animation: blink .65s step-end infinite; color: var(--moss); }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.cit-chat-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 12px; background: var(--ink3); border: none; border-radius: 20px; cursor: pointer; transition: background .15s, transform .1s; }
+.cit-chat-badge:hover { background: #343834; }
+.cit-chat-badge:active { transform: scale(0.96); }
+.cit-chat-badge svg { width: 13px; height: 13px; stroke: var(--moss); fill: none; stroke-width: 1.8; stroke-linecap: round; flex-shrink: 0; }
+.cit-chat-badge-text { font-size: 11px; color: var(--fg3); }
+.cit-chat-badge-count { font-size: 11px; font-weight: 600; color: var(--leaf); }
+.cache-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:var(--moss); background:var(--moss4); border:1px solid var(--moss3); padding:2px 8px; border-radius:10px; margin-top:8px; }
+
+/* Scroll button */
+#scrollBtn { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; border-radius: 50%; background: var(--ink3); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--fg3); z-index: 20; opacity: 0; pointer-events: none; transition: opacity .22s, transform .22s, background .15s; backdrop-filter: blur(6px); }
+#scrollBtn.visible { opacity: 1; pointer-events: auto; }
+#scrollBtn:hover { background: var(--ink3); color: var(--fg); }
+#scrollBtn:active { transform: translateX(-50%) scale(0.88); }
+#scrollBtn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ═══════════════════════════════════════════════════════
+   NEW CHAT SCREEN — fixed full-viewport overlay (clean architecture)
+   The #newChatScreen covers everything when app first loads.
+   The regular sidebar+main-col lives behind it untouched.
+   On first send, the overlay fades out to reveal the chat.
+═══════════════════════════════════════════════════════ */
+#newChatScreen {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--ink);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  /* Pass pointer events through the bg — only children capture them */
+  pointer-events: none;
+}
+#newChatScreen > * { pointer-events: all; }
+#newChatScreen.gone { display: none; pointer-events: none; }
+#newChatScreen.nc-bg-fade { background: transparent; }
+
+/* ── Greeting exit animation ── */
+.welcome-greeting {
+  transition: opacity 0.35s ease, transform 0.4s cubic-bezier(.4,0,.6,1);
+}
+#newChatScreen.nc-sending .welcome-greeting {
+  opacity: 0;
+  transform: translateY(-28px);
+}
+
+/* ── Chips exit animation ── */
+.welcome-chips-dock {
+  transition: opacity 0.25s ease, transform 0.3s ease;
+}
+#newChatScreen.nc-sending .welcome-chips-dock {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
+/* ── Input wrap slides DOWN to docked position ──
+   translate is approximate — moves it ~35% of viewport height downward.
+   We fade the whole newChatScreen bg separately so the input stays visible. */
+.nc-input-wrap {
+  transition: transform 0.6s cubic-bezier(.4,0,.2,1), opacity 0.5s ease;
+}
+#newChatScreen.nc-sending .nc-input-wrap {
+  transform: translateY(32vh);
+  /* Stays visible — opacity remains 1 */
+}
+
+/* nc-bg-fade handled in main newChatScreen rule */
+
+/* ── Messages feed fades IN during transition ── */
+.messages {
+  transition: opacity 0.45s ease 0.2s;
+}
+.messages.fade-in { opacity: 1 !important; }
+
+/* ── Real input dock slides UP into place from slightly below ── */
+.input-dock {
+  padding: 14px 24px 20px; background: transparent; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; z-index: 5;
+  /* Starts slightly below, animates into position */
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.4s ease 0.25s, transform 0.4s cubic-bezier(.34,1.2,.64,1) 0.25s;
+}
+.input-dock.settled {
+  opacity: 1;
+  transform: translateY(0);
+}
+.main-col .input-dock { width: 100%; }
+
+/* Ghost hamburger — fixed, always available, visible only on hover in new-chat state */
+/* ── Top-left navigation bar — always visible ──
+   Hamburger always shown at low opacity (brightens on hover).
+   Hover → sidebar expands as floating overlay.
+   Click → sidebar pins open.
+   Back/Forward arrows navigate view history. */
+#topNavBar {
+  position: fixed; top: 0; left: 0;
+  height: 46px;
+  display: flex; align-items: center; gap: 2px;
+  padding: 0 8px;
+  z-index: 200;
+  background: transparent;
+  pointer-events: all;
+}
+
+
+/* Greeting area */
+.welcome-greeting {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 44px;
+}
+.welcome-asterisk {
+  color: var(--accent-orange); flex-shrink: 0;
+  animation: asterisk-spin 12s linear infinite;
+}
+@keyframes asterisk-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+.welcome-wordmark {
+  font-family: var(--font-brand);
+  font-size: clamp(32px, 5vw, 54px); font-weight: 700;
+  color: var(--fg); letter-spacing: -0.03em; line-height: 1;
+}
+.welcome-scholar {
+  font-family: var(--mono); font-size: clamp(11px, 1.6vw, 16px); font-weight: 700;
+  color: var(--accent-teal); letter-spacing: 0.1em; text-transform: uppercase;
+  background: rgba(77,201,168,0.1); border: none;
+  padding: 2px 8px; border-radius: 4px; position: relative; top: -2px;
+}
+
+/* Input wrapper inside new-chat screen */
+.nc-input-wrap {
+  width: min(800px, calc(100vw - 40px));
+}
+
+/* Chips row below input */
+.welcome-chips-dock {
+  width: min(860px, calc(100vw - 40px));
+  display: flex; justify-content: center; flex-wrap: wrap;
+  gap: 10px; padding-top: 16px;
+}
+
+/* Chip */
+.welcome-chip {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13.5px; padding: 9px 20px; border-radius: 22px; border: none;
+  color: var(--fg2); background: var(--ink3); cursor: pointer; white-space: nowrap;
+  transition: background .15s, color .15s, transform .12s;
+  opacity: 0;
+  animation: chip-slide-up 0.42s cubic-bezier(.34,1.2,.64,1) forwards;
+}
+.welcome-chip:hover  { background: #343834; color: var(--fg); }
+.welcome-chip:active { transform: scale(0.96) !important; }
+.welcome-chip svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+@keyframes chip-slide-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.welcome-chip:nth-child(1) { animation-delay: 0.04s; }
+.welcome-chip:nth-child(2) { animation-delay: 0.11s; }
+.welcome-chip:nth-child(3) { animation-delay: 0.18s; }
+.welcome-chip:nth-child(4) { animation-delay: 0.25s; }
+.welcome-chip:nth-child(5) { animation-delay: 0.32s; }
+
+/* input-dock defined in transition CSS above */
+
+/* Suppress scrollBtn when new-chat overlay is on top */
+.app-new-chat #scrollBtn { display: none; }
+
+
+.input-float {
+  width: 100%;
+  max-width: 800px;
+  background: var(--ink2); border: 1px solid var(--bd2);
+  border-radius: 18px;
+  box-shadow: 0 6px 40px rgba(0,0,0,0.42);
+  transition: border-color .16s ease, box-shadow .16s ease,
+              transform .16s cubic-bezier(.34,1.56,.64,1),
+              background .16s ease;
+  overflow: hidden; position: relative;
+}
+/* Hover — responsive expansion before click */
+.input-float:hover:not(.focused) {
+  border-color: rgba(90,138,90,0.4);
+  background: #1e2420;
+  box-shadow: 0 8px 44px rgba(0,0,0,0.48);
+  transform: scaleX(1.007) scaleY(1.008);
+}
+/* Focused — stronger expansion */
+.input-float.focused {
+  border-color: var(--moss3);
+  background: #202622;
+  box-shadow: 0 6px 48px rgba(0,0,0,0.52), 0 0 0 1.5px rgba(38,68,38,0.32);
+  transform: scaleX(1.014) scaleY(1.018);
+}
+/* ══ NEW-CHAT AMBIENT FLOAT GLOW ════════════════════════════════════
+   Two separate layers — green (::before) and orange (::after) —
+   each with a FIXED radial blob. Only their opacity is animated,
+   offset in time from each other. Opacity IS smoothly interpolatable,
+   so the two colours blend continuously like drifting smoke.
+   Overfitting reduced 50%: inset values halved vs previous version.
+════════════════════════════════════════════════════════════════════ */
+
+.nc-glow-wrap {
+  position: relative;
+  width: min(800px, calc(100vw - 40px));
+  flex-shrink: 0;
+}
+
+/* Shared layer base */
+.nc-glow-wrap::before,
+.nc-glow-wrap::after {
+  content: '';
+  position: absolute;
+  /* 50% less overfitting than before (was ±28/24px, now ±14/12px) */
+  top: -14px; left: -12px; right: -12px; bottom: -14px;
+  border-radius: 26px;
+  filter: blur(20px);
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Green layer — centred slightly left */
+.nc-glow-wrap::before {
+  background: radial-gradient(
+    ellipse 60% 75% at 35% 52%,
+    rgba(77,201,168,0.55) 0%,
+    rgba(77,201,168,0.18) 45%,
+    transparent 70%
+  );
+  transition: opacity 0.8s ease;
+}
+
+/* Orange layer — centred slightly right */
+.nc-glow-wrap::after {
+  background: radial-gradient(
+    ellipse 60% 75% at 65% 48%,
+    rgba(232,120,74,0.50) 0%,
+    rgba(232,120,74,0.15) 45%,
+    transparent 70%
+  );
+  transition: opacity 0.8s ease;
+}
+
+/* Input floats above both glow layers */
+.nc-glow-wrap #ncInputFloat {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── ACTIVE: both layers visible, opacity animates independently ──
+   Green and orange run on different cycle lengths so they drift
+   in and out of phase — creating the smoke-blend crossfade. */
+.nc-glow-wrap.glow-on::before {
+  animation: glow-green 6s ease-in-out infinite;
+}
+.nc-glow-wrap.glow-on::after {
+  animation: glow-orange 7.5s ease-in-out infinite;
+  /* offset start so they're never in sync */
+  animation-delay: -2.8s;
+}
+.nc-glow-wrap.glow-on #ncInputFloat {
+  animation: border-smoke 6s ease-in-out infinite;
+  transition: border-color 1.2s ease, box-shadow 1.2s ease;
+}
+
+/* ── SEND: both layers intensify then fade with the sliding box ── */
+.nc-glow-wrap.glow-send::before,
+.nc-glow-wrap.glow-send::after {
+  filter: blur(10px);
+  animation: glow-send-fade 0.7s ease forwards;
+}
+.nc-glow-wrap.glow-send #ncInputFloat {
+  border-color: rgba(77,201,168,0.5);
+  box-shadow: 0 0 16px 3px rgba(77,201,168,0.22),
+              0 0 10px 2px rgba(232,120,74,0.16),
+              0 8px 40px rgba(0,0,0,0.5);
+  animation: none;
+  transition: none;
+}
+
+/* ── DONE: fade both layers out ── */
+.nc-glow-wrap.glow-done::before,
+.nc-glow-wrap.glow-done::after {
+  opacity: 0 !important;
+  animation: none;
+  transition: opacity 0.55s ease;
+}
+.nc-glow-wrap.glow-done #ncInputFloat {
+  border-color: var(--bd2);
+  box-shadow: 0 6px 40px rgba(0,0,0,0.42);
+  animation: none;
+  transition: border-color 0.55s ease, box-shadow 0.55s ease;
+}
+
+/* Green layer breathes: 0.18 → 0.70 → 0.22 → 0.65 → 0.18 */
+@keyframes glow-green {
+  0%   { opacity: 0.18; }
+  25%  { opacity: 0.70; }
+  50%  { opacity: 0.22; }
+  75%  { opacity: 0.65; }
+  100% { opacity: 0.18; }
+}
+
+/* Orange layer breathes on a different period — creates the drift */
+@keyframes glow-orange {
+  0%   { opacity: 0.60; }
+  30%  { opacity: 0.15; }
+  55%  { opacity: 0.65; }
+  80%  { opacity: 0.20; }
+  100% { opacity: 0.60; }
+}
+
+/* Border hue follows the dominant colour smoothly */
+@keyframes border-smoke {
+  0%,100% { border-color: rgba(77,201,168,0.22);  box-shadow: 0 0 12px 2px rgba(77,201,168,0.08),  0 8px 40px rgba(0,0,0,0.5); }
+  28%     { border-color: rgba(77,201,168,0.36);  box-shadow: 0 0 18px 3px rgba(77,201,168,0.15),  0 8px 40px rgba(0,0,0,0.5); }
+  55%     { border-color: rgba(232,120,74,0.28);  box-shadow: 0 0 14px 2px rgba(232,120,74,0.12),  0 8px 40px rgba(0,0,0,0.5); }
+  78%     { border-color: rgba(232,120,74,0.20);  box-shadow: 0 0 10px 2px rgba(232,120,74,0.08),  0 8px 40px rgba(0,0,0,0.5); }
+}
+
+/* Send: both layers pulse bright then die as box slides */
+@keyframes glow-send-fade {
+  0%   { opacity: 0.85; filter: blur(10px); }
+  45%  { opacity: 0.90; filter: blur(7px);  }
+  100% { opacity: 0;    filter: blur(20px); }
+}
+
+/* Legacy stubs */
+.input-float.nc-glow { }
+.nc-glow-off         { }
+
+.input-field {
+  display: block; width: 100%; background: transparent; border: none; outline: none;
+  color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  padding: 18px 22px 10px; resize: none;
+  min-height: 70px;          /* +20% from 58px */
+  max-height: 264px;         /* +20% from 220px */
+  overflow-y: auto;
+}
+.input-field::placeholder { color: var(--fg4); }
+.input-field::-webkit-scrollbar { width: 3px; }
+.input-field::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+.input-bottom-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 10px; gap: 8px; }
+.input-left-row  { display: flex; align-items: center; gap: 6px; }
+.input-right-row { display: flex; align-items: center; gap: 8px; }
+.input-hint { font-size: 10px; color: var(--fg4); letter-spacing: .03em; }
+
+.model-pill { display: flex; align-items: center; gap: 5px; padding: 5px 13px; border-radius: 10px; background: var(--ink3); border: none; font-size: 13px; color: var(--fg3); font-weight: 500; cursor: default; white-space: nowrap; transition: background .15s; }
+.model-pill:hover { background: #343834; }
+.model-pill .model-alpha { font-family: var(--mono); font-size: 14px; color: var(--accent-amber); font-weight: 700; }
+.model-pill svg { width: 11px; height: 11px; stroke: var(--fg3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.send-btn { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-orange); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .12s cubic-bezier(.34,1.56,.64,1), opacity .15s; flex-shrink: 0; }
+.send-btn:hover { background: #d4693e; transform: scale(1.08); }
+.send-btn:active { transform: scale(0.93); }
+.send-btn:disabled { background: var(--ink3); opacity: 0.45; cursor: not-allowed; transform: none; }
+.send-btn svg { width: 15px; height: 15px; fill: #fff; }
+
+/* ── Modals / Lightbox ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:500; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s; backdrop-filter:blur(4px); }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal-box { background:var(--ink1); border:1px solid var(--bd2); border-radius:16px; width:440px; overflow:hidden; transform:scale(0.93) translateY(14px); transition:transform .25s cubic-bezier(.34,1.56,.64,1); box-shadow:0 20px 60px rgba(0,0,0,.5); }
+.modal-overlay.open .modal-box { transform:scale(1) translateY(0); }
+.modal-header { padding:18px 22px 14px; background: var(--ink2); display:flex; align-items:center; justify-content:space-between; }
+.modal-title  { font-size:14px; color:var(--fg); font-weight:500; }
+.modal-sub    { font-size:11px; color:var(--fg3); margin-top:2px; }
+.modal-close  { width:28px; height:28px; border-radius:50%; border:none; background:var(--ink3); color:var(--fg3); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:color .15s, background .15s; }
+.modal-close:hover { color:var(--fg); background:#343834; }
+.modal-body { padding:16px 22px 20px; display:flex; flex-direction:column; gap:10px; }
+.doc-card { display:flex; align-items:center; gap:14px; padding:12px 14px; background:var(--ink2); border:none; border-radius:12px; cursor:pointer; transition:background .15s; }
+.doc-card:hover { background:var(--ink3); }
+.doc-card.active-doc { background: rgba(61,107,61,0.15); }
+.doc-cover { width:36px; height:46px; background:var(--moss4); border-radius:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.doc-cover svg { width:18px; height:18px; fill:var(--moss); }
+.doc-name    { font-size:13px; color:var(--fg); font-weight:500; }
+.doc-edition { font-size:11px; color:var(--fg3); margin-top:2px; }
+.doc-desc    { font-size:11px; color:var(--fg3); margin-top:3px; line-height:1.5; }
+.doc-check   { margin-left:auto; width:18px; height:18px; border-radius:50%; background:var(--moss2); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s; flex-shrink:0; }
+.doc-card.active-doc .doc-check { opacity:1; }
+.doc-check svg { width:10px; height:10px; fill:var(--leaf2); }
+.empty-state { text-align:center; padding:48px 24px; color:var(--fg3); font-size:13px; }
+
+.lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:800; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s; backdrop-filter:blur(4px); }
+.lightbox.open { opacity:1; pointer-events:all; }
+.lightbox-img  { max-width:88vw; max-height:84vh; border-radius:8px; }
+.lightbox-close { position:absolute; top:24px; right:28px; width:36px; height:36px; border-radius:50%; background:var(--ink3); border:none; color:var(--fg3); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color .15s, background .15s; }
+.lightbox-close:hover { color:var(--fg); background:#343834; }
+.lightbox-caption { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); font-size:12px; color:var(--fg3); background:var(--ink1); border:1px solid var(--bd2); padding:5px 16px; border-radius:20px; white-space:nowrap; }
+
+/* ═══════════════════════════════════════════════════════
+   MARKDOWN VISUAL HIERARCHY
+═══════════════════════════════════════════════════════ */
+.md-body { font-family: var(--serif); font-size: 1.17rem; line-height: 1.65; color: var(--fg); word-break: break-word; }
+.md-body h1 { font-family: Georgia, ui-serif, serif; font-size: 1.45rem; font-weight: 700; color: var(--accent-amber); margin: 1.4em 0 0.5em; letter-spacing: -0.02em; line-height: 1.3; padding-bottom: 6px; border-bottom: 1px solid rgba(232,160,74,0.2); }
+.md-body h2 { font-family: Georgia, ui-serif, serif; font-size: 1.25rem; font-weight: 700; color: var(--accent-amber); margin: 1.2em 0 0.4em; letter-spacing: -0.01em; }
+.md-body h3 { font-size: 1.1rem; font-weight: 600; color: var(--accent-violet); margin: 1em 0 0.35em; }
+.md-body h4, .md-body h5, .md-body h6 { font-size: 1rem; font-weight: 600; color: var(--accent-teal); margin: 0.8em 0 0.3em; }
+.md-body > h1:first-child, .md-body > h2:first-child, .md-body > h3:first-child { margin-top: 0; }
+.md-body p { margin-bottom: 0.9em; }
+.md-body p:last-child { margin-bottom: 0; }
+.md-body strong { font-weight: 600; color: var(--leaf2); }
+.md-body em     { font-style: italic; color: var(--fg2); }
+.md-body ul, .md-body ol { margin: 0.5em 0 0.9em 1.5em; display: flex; flex-direction: column; gap: 4px; }
+.md-body li { line-height: 1.6; }
+.md-body hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--bd2) 30%, var(--bd2) 70%, transparent); margin: 1.2em 0; }
+.md-body blockquote { border-left: 3px solid var(--accent-violet); background: rgba(157,127,232,0.07); padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 0.8em 0; color: var(--fg2); font-style: italic; }
+.md-body blockquote p { margin-bottom: 0; }
+.md-body code:not([class]) { font-family: var(--mono); font-size: 0.88em; background: rgba(74,158,255,0.1); color: var(--accent-blue); padding: 1px 6px; border-radius: 5px; border: 1px solid rgba(74,158,255,0.18); }
+.md-body pre { background: #1a1c2a !important; border: 1px solid var(--bd2); border-radius: 10px; overflow-x: auto; margin: 0.8em 0 1em; position: relative; padding: 36px 18px 14px 18px; }
+.md-body pre code { font-family: var(--mono); font-size: 0.85rem; background: transparent !important; color: inherit; padding: 0; border: none; border-radius: 0; }
+.md-body pre .code-lang { position: absolute; top: 10px; left: 14px; font-family: var(--sans); font-size: 10px; color: var(--fg3); text-transform: uppercase; letter-spacing: 0.08em; pointer-events: none; }
+.md-body pre .code-copy-btn { position: absolute; top: 7px; right: 10px; background: var(--ink3); border: 1px solid var(--bd2); color: var(--fg3); font-family: var(--sans); font-size: 10px; padding: 3px 10px; border-radius: 6px; cursor: pointer; opacity: 0; transition: opacity .18s, color .13s, background .13s; }
+.md-body pre:hover .code-copy-btn { opacity: 1; }
+.md-body pre .code-copy-btn:hover { color: var(--fg); background: var(--bd); }
+.md-body pre .code-copy-btn.copied { color: var(--accent-teal); border-color: rgba(77,201,168,0.4); }
+.md-body table { width: 100%; border-collapse: collapse; margin: 0.8em 0 1em; font-size: 0.92rem; }
+.md-body th { background: var(--ink2); color: var(--accent-teal); font-weight: 600; text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--bd2); }
+.md-body td { padding: 7px 12px; border-bottom: 1px solid var(--bd); color: var(--fg2); }
+.md-body tr:hover td { background: rgba(255,255,255,0.02); }
+.md-body .katex-display { overflow-x: auto; padding: 4px 0; margin: 0.6em 0; }
+.md-body .katex { color: var(--fg); }
+.token.comment, .token.prolog { color: #636e7a; }
+.token.punctuation { color: #8a9e8a; }
+.token.property, .token.boolean, .token.number { color: #e8784a; }
+.token.selector, .token.string { color: #8dc88d; }
+.token.operator, .token.keyword { color: #4dc9a8; }
+.token.function, .token.class-name { color: #4a9eff; }
+.token.variable, .token.important { color: #e8a04a; }
+
+/* Probe box */
+.probe-box { margin-top: 10px; background: var(--ink2); border-radius: 10px; border: 1px solid var(--bd2); padding: 11px 15px; display: flex; gap: 10px; }
+.probe-icon { width:20px; height:20px; border-radius:50%; background:var(--moss4); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+.probe-icon svg { width:10px; height:10px; fill:var(--leaf); }
+.probe-label { font-size:10px; color:var(--moss); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; font-weight:600; }
+.probe-q { font-size:13px; color:var(--fg2); line-height:1.6; font-family:var(--serif); }
+/* ═══════════════════════════════════════════════════════
+   SESSION D — FLASHCARD DECK
+═══════════════════════════════════════════════════════ */
+#flashcardsPage {
+  display: none; flex: 1; flex-direction: column;
+  min-width: 0; background: var(--ink);
+  animation: fade-up .25s ease;
+}
+#flashcardsPage.active { display: flex; }
+
+/* Top bar shared style already defined (.page-topbar) */
+.fc-topbar-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  color: var(--fg3); background: var(--ink2);
+  border: 1px solid var(--bd2); border-radius: 8px;
+  padding: 5px 12px; cursor: pointer;
+  transition: color .13s, background .13s, border-color .13s;
+}
+.fc-topbar-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.fc-topbar-btn:hover { color: var(--fg); background: var(--ink3); border-color: var(--bd); }
+.fc-topbar-btn-ghost { background: transparent; border-color: transparent; }
+.fc-topbar-btn-ghost:hover { background: var(--ink3); border-color: var(--bd); }
+
+/* ── Split layout ── */
+.fc-split {
+  flex: 1; display: flex; min-height: 0; overflow: hidden;
+  position: relative;
+}
+/* ── Drag handle ── */
+.fc-drag-handle {
+  width: 5px; flex-shrink: 0; cursor: col-resize;
+  background: transparent; position: relative; z-index: 10;
+  transition: background .2s;
+}
+.fc-drag-handle::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px; height: 36px;
+  background: var(--ink3); border-radius: 2px;
+  transition: background .2s, height .2s;
+}
+.fc-drag-handle:hover::after,
+.fc-drag-handle.dragging::after {
+  background: var(--moss); height: 56px;
+}
+.fc-split.is-dragging { user-select: none; cursor: col-resize; }
+.fc-split.is-dragging * { pointer-events: none; }
+
+/* ── Deck pane (left, 55%) — darker shade distinguishes from chat pane ── */
+.fc-deck-pane {
+  flex: 0 0 55%; max-width: 55%;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 28px 32px;
+  background: var(--ink2);    /* slightly darker than chat pane — shade replaces border */
+  overflow-y: auto;
+}
+
+/* Empty state */
+.fc-empty { text-align: center; max-width: 360px; }
+.fc-empty-icon { color: var(--fg4); margin-bottom: 16px; }
+.fc-empty-title { font-size: 16px; font-weight: 600; color: var(--fg); margin-bottom: 8px; }
+.fc-empty-sub { font-size: 13px; color: var(--fg3); line-height: 1.6; }
+
+/* Progress bar */
+.fc-progress-wrap {
+  width: 100%; max-width: 520px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+}
+.fc-progress-bar {
+  flex: 1; height: 4px; background: var(--bd2); border-radius: 2px; overflow: hidden;
+}
+.fc-progress-fill {
+  height: 100%; background: var(--accent-teal); border-radius: 2px;
+  transition: width .4s ease;
+}
+.fc-progress-label { font-size: 11px; color: var(--fg3); white-space: nowrap; }
+
+/* The card */
+.fc-card-wrap {
+  width: 100%; max-width: 520px;
+  perspective: 1200px; cursor: pointer;
+  margin-bottom: 20px;
+}
+.fc-card {
+  width: 100%; min-height: 240px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+  border-radius: 18px;
+}
+.fc-card.flipped { transform: rotateY(180deg); }
+
+.fc-card-front, .fc-card-back {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 18px;
+  padding: 28px 28px 22px;
+  display: flex; flex-direction: column;
+}
+.fc-card-front {
+  background: var(--ink2); border: 1px solid var(--bd2);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+.fc-card-back {
+  background: var(--ink2); border: 1px solid var(--moss3);
+  box-shadow: 0 4px 28px rgba(93,138,93,0.15);
+  transform: rotateY(180deg);
+}
+.fc-card-side-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; margin-bottom: 14px;
+}
+.fc-card-front .fc-card-side-label { color: var(--fg4); }
+.fc-card-back  .fc-card-side-label { color: var(--moss); }
+.fc-card-text {
+  font-family: var(--serif); font-size: 1.1rem; line-height: 1.65;
+  color: var(--fg); flex: 1;
+}
+.fc-flip-hint {
+  font-size: 11px; color: var(--fg4); margin-top: 14px;
+  text-align: center; letter-spacing: 0.02em;
+}
+
+/* Rating buttons */
+.fc-rating {
+  display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;
+}
+.fc-rate-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  padding: 7px 16px; border-radius: 10px; cursor: pointer; border: 1px solid;
+  transition: opacity .13s, transform .1s;
+}
+.fc-rate-btn:active { transform: scale(0.94); }
+.fc-rate-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fc-rate-again  { background: rgba(232,122,122,0.12); color: var(--accent-rose);  border-color: rgba(232,122,122,0.3); }
+.fc-rate-almost { background: rgba(232,160,74,0.12);  color: var(--accent-amber); border-color: rgba(232,160,74,0.3); }
+.fc-rate-got    { background: rgba(77,201,168,0.12);  color: var(--accent-teal);  border-color: rgba(77,201,168,0.3); }
+.fc-rate-again:hover  { background: rgba(232,122,122,0.22); }
+.fc-rate-almost:hover { background: rgba(232,160,74,0.22); }
+.fc-rate-got:hover    { background: rgba(77,201,168,0.22); }
+
+/* Navigation */
+.fc-nav {
+  display: flex; align-items: center; gap: 20px; justify-content: center;
+}
+.fc-nav-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--ink2); border: 1px solid var(--bd2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--fg3); transition: background .13s, color .13s, transform .1s;
+}
+.fc-nav-btn:hover  { background: var(--ink3); color: var(--fg); }
+.fc-nav-btn:active { transform: scale(0.9); }
+.fc-nav-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.fc-nav-label { font-size: 12px; color: var(--fg3); min-width: 80px; text-align: center; }
+
+/* Session complete */
+.fc-complete {
+  text-align: center; max-width: 380px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.fc-complete-emoji { font-size: 42px; }
+.fc-complete-title { font-size: 18px; font-weight: 700; color: var(--fg); }
+.fc-complete-stats { font-size: 13px; color: var(--fg3); line-height: 1.7; }
+.fc-complete-actions { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+.fc-action-btn {
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  padding: 8px 20px; border-radius: 10px; cursor: pointer;
+  background: var(--moss2); border: none; color: var(--leaf3);
+  transition: background .13s, transform .1s;
+}
+.fc-action-btn:hover  { background: var(--moss); }
+.fc-action-btn:active { transform: scale(0.96); }
+.fc-action-ghost { background: var(--ink2); border: 1px solid var(--bd2); color: var(--fg3); }
+.fc-action-ghost:hover { background: var(--ink3); }
+
+/* ── Chat pane (right, 45%) ── */
+.fc-chat-pane {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  background: var(--ink);
+}
+.fc-chat-header {
+  padding: 16px 20px 12px; flex-shrink: 0;
+  /* No border — shade difference with fc-messages provides separation */
+}
+.fc-chat-title { font-size: 13px; font-weight: 600; color: var(--fg); }
+.fc-chat-sub { font-size: 11px; color: var(--fg3); margin-top: 2px; }
+
+.fc-messages {
+  flex: 1; overflow-y: auto; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 14px;
+  scroll-behavior: smooth;
+}
+.fc-messages::-webkit-scrollbar { width: 3px; }
+.fc-messages::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+.fc-welcome-msg {
+  font-size: 13px; color: var(--fg3); font-style: italic; line-height: 1.6;
+  padding: 12px 14px; background: var(--ink3); border-radius: 10px;
+  /* No border — shade differentiates */
+}
+.fc-msg-user {
+  display: flex; justify-content: flex-end;
+}
+.fc-msg-user .fc-bubble {
+  background: var(--ink3); border: none;
+  color: var(--fg); font-family: var(--sans); font-size: 13.5px;
+  line-height: 1.55; padding: 9px 14px;
+  border-radius: 16px 16px 3px 16px; max-width: 85%;
+}
+.fc-msg-ai .fc-bubble {
+  font-family: var(--serif); font-size: 14px; line-height: 1.65;
+  color: var(--fg); max-width: 100%;
+}
+/* AI response in deck chat also gets md-body class for formatting */
+.fc-msg-ai .fc-bubble.md-body { white-space: normal; }
+
+.fc-input-wrap {
+  padding: 10px 16px 16px;
+  /* No border-top — slightly darker bg provides natural separation */
+  background: var(--ink2);
+  display: flex; gap: 8px; align-items: flex-end;
+}
+.fc-input-field {
+  flex: 1; background: var(--ink3); border: none;
+  border-radius: 12px; padding: 10px 14px; resize: none;
+  font-family: var(--sans); font-size: 13.5px; color: var(--fg);
+  outline: none; min-height: 42px; max-height: 120px; overflow-y: auto;
+  transition: background .2s;
+}
+.fc-input-field:focus { border-color: var(--moss3); }
+.fc-input-field::placeholder { color: var(--fg4); }
+.fc-send-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent-orange); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background .15s, transform .12s;
+}
+.fc-send-btn:hover  { background: #d4693e; transform: scale(1.06); }
+.fc-send-btn:active { transform: scale(0.93); }
+.fc-send-btn:disabled { background: var(--ink3); opacity: 0.45; cursor: not-allowed; transform: none; }
+.fc-send-btn svg { width: 14px; height: 14px; fill: #fff; }
+
+/* Thinking dots in flashcard chat */
+.fc-typing { display: flex; gap: 4px; align-items: center; padding: 10px 0 4px; }
+.fc-typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--fg3); animation: pulse-dot 1.4s infinite; }
+.fc-typing span:nth-child(2){animation-delay:.18s} .fc-typing span:nth-child(3){animation-delay:.36s}
+
+/* ═══════════════════════════════════════════════════════
+   SESSION E — SCHOLAR DASHBOARD
+═══════════════════════════════════════════════════════ */
+#dashboardPage {
+  display: none; flex: 1; flex-direction: column; min-width: 0;
+  background: var(--ink); overflow: hidden;
+  animation: fade-up .25s ease;
+}
+#dashboardPage.active { display: flex; }
+
+/* ── Tab bar ── */
+.dash-tabbar {
+  height: 48px; background: var(--ink); flex-shrink: 0;
+  display: flex; align-items: center; padding: 0 20px; gap: 4px;
+}
+.dash-tab {
+  font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--fg3);
+  background: none; border: none; padding: 6px 14px; border-radius: 8px; cursor: pointer;
+  transition: color .13s, background .13s; white-space: nowrap;
+}
+.dash-tab:hover  { color: var(--fg); background: var(--ink3); }
+.dash-tab.active { color: var(--fg); background: var(--ink3); }
+.dash-tab-spacer { flex: 1; }
+
+/* ── Body & panels ── */
+.dash-body { flex: 1; overflow: hidden; position: relative; }
+.dash-panel {
+  display: none; position: absolute; inset: 0;
+  overflow-y: auto; padding: 24px 32px 40px;
+  animation: fade-up .2s ease;
+}
+.dash-panel::-webkit-scrollbar { width: 4px; }
+.dash-panel::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+.dash-panel.active { display: block; }
+
+.dash-section-label {
+  font-size: 10px; color: var(--fg3); letter-spacing: .12em; text-transform: uppercase;
+  font-weight: 600; margin-top: 28px; margin-bottom: 12px;
+}
+
+/* ── Overview: greeting ── */
+.dash-greeting { margin-bottom: 24px; }
+.dash-greeting-title {
+  font-family: var(--font-brand);
+  font-size: clamp(20px, 3vw, 28px); color: var(--fg); font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.dash-greeting-sub { font-size: 14px; color: var(--fg3); margin-top: 4px; }
+
+/* ── Stats row ── */
+.dash-stats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.dash-stat-card {
+  flex: 1; min-width: 110px; max-width: 160px;
+  background: var(--ink2); border-radius: 14px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 4px;
+  transition: background .15s;
+}
+.dash-stat-card:hover { background: var(--ink3); }
+.dash-stat-icon { font-size: 20px; margin-bottom: 4px; }
+.dash-stat-val  { font-size: 26px; font-weight: 700; color: var(--fg); line-height: 1; }
+.dash-stat-label{ font-size: 11px; color: var(--fg3); margin-top: 2px; }
+
+/* ── Coverage bar ── */
+.dash-coverage-list { display: flex; flex-direction: column; gap: 10px; max-width: 560px; }
+.dash-coverage-row { display: flex; align-items: center; gap: 12px; }
+.dash-coverage-name { font-size: 12px; color: var(--fg2); min-width: 160px; }
+.dash-coverage-bar  { flex: 1; height: 6px; background: var(--ink3); border-radius: 3px; overflow: hidden; }
+.dash-coverage-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+.dash-coverage-pct  { font-size: 11px; color: var(--fg3); min-width: 32px; text-align: right; }
+
+/* ── Topic mastery pills ── */
+.dash-mastery-grid { display: flex; flex-wrap: wrap; gap: 8px; max-width: 640px; }
+.dash-mastery-pill {
+  font-size: 12px; padding: 5px 14px; border-radius: 20px; font-weight: 500;
+  cursor: default;
+}
+.mastery-green { background: rgba(77,201,168,0.15); color: var(--accent-teal); }
+.mastery-amber { background: rgba(232,160,74,0.15); color: var(--accent-amber); }
+.mastery-rose  { background: rgba(232,122,122,0.15); color: var(--accent-rose); }
+.mastery-grey  { background: var(--ink3); color: var(--fg3); }
+
+/* ── Awards shelf ── */
+.dash-awards-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.dash-award {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--ink2); border-radius: 14px; padding: 16px 14px;
+  min-width: 80px; cursor: default; transition: background .15s;
+}
+.dash-award.earned { background: var(--ink2); }
+.dash-award.locked { opacity: 0.4; }
+.dash-award-icon  { font-size: 26px; }
+.dash-award-name  { font-size: 10px; color: var(--fg3); text-align: center; letter-spacing: .03em; }
+.dash-award.earned:hover { background: var(--ink3); }
+
+/* ── Calendar heatmap ── */
+.cal-heatmap-wrap { margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px; }
+.cal-heatmap {
+  display: flex; gap: 3px;
+  width: max-content;
+}
+.cal-week { display: flex; flex-direction: column; gap: 3px; }
+.cal-cell {
+  width: 13px; height: 13px; border-radius: 2px;
+  background: var(--ink3); cursor: pointer;
+  transition: opacity .1s;
+}
+.cal-cell:hover { opacity: .7; }
+.cal-cell.l1 { background: var(--moss4); }
+.cal-cell.l2 { background: var(--moss3); }
+.cal-cell.l3 { background: var(--moss2); }
+.cal-cell.l4 { background: var(--moss); }
+.cal-cell.l5 { background: var(--leaf); }
+
+.cal-legend { display: flex; align-items: center; gap: 4px; margin-top: 8px; }
+.cal-legend-label { font-size: 10px; color: var(--fg4); }
+.cal-legend-cell  { width: 12px; height: 12px; border-radius: 2px; }
+
+.dash-upcoming-list { display: flex; flex-direction: column; gap: 8px; }
+.dash-upcoming-empty { font-size: 12px; color: var(--fg3); font-style: italic; }
+
+/* ── Study modes ── */
+.dash-modes-intro { font-size: 13px; color: var(--fg3); margin-bottom: 20px; }
+.dash-modes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px; margin-bottom: 28px;
+}
+.dash-mode-card {
+  background: var(--ink2); border-radius: 14px; padding: 20px 18px;
+  cursor: pointer; display: flex; flex-direction: column; gap: 8px;
+  transition: background .15s, transform .12s; position: relative;
+}
+.dash-mode-card:hover  { background: var(--ink3); transform: translateY(-1px); }
+.dash-mode-card:active { transform: scale(0.98); }
+.dash-mode-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
+}
+.dash-mode-name { font-size: 14px; color: var(--fg); font-weight: 600; }
+.dash-mode-desc { font-size: 12px; color: var(--fg3); line-height: 1.55; }
+.dash-mode-tag  {
+  font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--fg4); margin-top: 4px;
+}
+
+/* Active mode session (embedded quiz/exam) */
+.dash-mode-active {
+  background: var(--ink2); border-radius: 16px;
+  overflow: hidden; display: flex; flex-direction: column;
+  max-height: 520px;
+}
+.dash-mode-active-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--ink3);
+}
+.dash-mode-active-title { font-size: 14px; font-weight: 600; color: var(--fg); }
+.dash-mode-messages {
+  flex: 1; overflow-y: auto; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 14px;
+  min-height: 220px;
+}
+.dash-mode-messages::-webkit-scrollbar { width: 3px; }
+.dash-mode-messages::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+.dash-mode-input-wrap {
+  display: flex; gap: 8px; align-items: flex-end;
+  padding: 10px 14px 14px; background: var(--ink2);
+}
+
+/* ── Progress tab ── */
+.dash-progress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 700px) { .dash-progress-grid { grid-template-columns: 1fr; } }
+.dash-progress-section { }
+
+.dash-wheels-row { display: flex; flex-wrap: wrap; gap: 16px; }
+.dash-wheel-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.dash-wheel-svg { transform: rotate(-90deg); }
+.dash-wheel-bg  { fill: none; stroke: var(--ink3); stroke-width: 4; }
+.dash-wheel-fg  { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .8s ease; }
+.dash-wheel-label { font-size: 11px; color: var(--fg3); text-align: center; max-width: 60px; }
+
+/* Bar chart */
+.dash-bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 80px; padding-bottom: 4px; }
+.dash-bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.dash-bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--moss3); min-height: 4px; transition: height .5s ease; }
+.dash-bar-day { font-size: 9px; color: var(--fg4); text-align: center; }
+
+.dash-sessions-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.dash-session-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--ink2); border-radius: 10px; padding: 10px 14px;
+  font-size: 12px;
+}
+.dash-session-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--moss); flex-shrink: 0; }
+.dash-session-title { flex: 1; color: var(--fg2); }
+.dash-session-date  { color: var(--fg4); white-space: nowrap; }
+
+/* ── Floating Orelia button ── */
+.orelia-float-btn {
+  position: absolute; bottom: 28px; right: 28px;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--accent-orange); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(232,120,74,0.4);
+  transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;
+  z-index: 30;
+}
+.orelia-float-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(232,120,74,0.55); }
+.orelia-float-btn:active { transform: scale(0.93); }
+.orelia-float-btn svg { width: 20px; height: 20px; }
+
+/* ── Orelia tray (slides up from bottom) ── */
+.orelia-tray {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 0; overflow: hidden;
+  background: var(--ink1);
+  transition: height .32s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+  z-index: 20;
+}
+.orelia-tray.open { height: 48%; }
+.orelia-tray-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px 10px; flex-shrink: 0; background: var(--ink2);
+}
+.orelia-tray-title { font-size: 13px; font-weight: 600; color: var(--fg); }
+.orelia-tray-msgs {
+  flex: 1; overflow-y: auto; padding: 14px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.orelia-tray-msgs::-webkit-scrollbar { width: 3px; }
+.orelia-tray-msgs::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+/* ── Left-edge hover zone — reveals sidebar in new-chat state ── */
+#leftEdgeZone {
+  position: fixed;
+  top: 0; left: 0;
+  width: 28px;          /* wider for easier triggering */
+  height: 100vh;
+  z-index: 9999;        /* above newChatScreen (z-50) */
+  pointer-events: none; /* inactive by default */
+  background: transparent;
+  cursor: default;
+}
+.app-new-chat #leftEdgeZone { pointer-events: all; }
+/* Sidebar fade-in during new-chat hover */
+.app-new-chat .sidebar {
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.app-new-chat .sidebar.nc-sidebar-peek {
+  opacity: 1;
+  pointer-events: all;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SPLASH ═══════════════════════════════════════ -->
+<div id="splash">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="splash-wordmark" id="splashWord">
+      <span class="splash-char">O</span><span class="splash-char">r</span><span class="splash-char">e</span><span class="splash-char">l</span><span class="splash-char">i</span><span class="splash-char">a</span>
+    </div>
+    <div class="splash-sub" id="splashSub">Scholar · by Enthios</div>
+  </div>
+  <div class="splash-bar-wrap"><div class="splash-bar-fill" id="splashBar"></div></div>
+</div>
+
+<!-- ═══ APP ═══════════════════════════════════════════ -->
+<div id="app" class="app-new-chat">
+
+  <!-- ──── SIDEBAR ──────────────────────────────────── -->
+  <div class="sidebar" id="sidebar">
+
+    <!-- pin button removed — hamburger click pins directly -->
+
+    <div class="sb-toggle-row">
+      <button class="sb-toggle" id="sbToggleBtn" onclick="handleHamburger()" title="Toggle sidebar">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="sb-brand-text">
+        <div class="brand-name">Orelia <span class="brand-scholar">Scholar</span></div>
+        <div class="brand-sub">by Enthios · Study Intelligence</div>
+      </div>
+    </div>
+
+    <div class="sb-icon-nav">
+
+      <!-- New session — blue / TOGGLE: always goes to chat -->
+      <div class="sb-row" id="navNewSession" onclick="navAction('newSession')" title="New session">
+        <div class="sb-row-icon" style="color:var(--accent-blue)">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+        <span class="sb-row-label">New session</span>
+      </div>
+
+      <!-- Search -->
+      <div class="sb-row" id="navSearch" onclick="navAction('search')" title="Search sessions">
+        <div class="sb-row-icon">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <span class="sb-row-label">Search</span>
+      </div>
+
+      <div class="sb-div"></div>
+      <div class="sb-section-label">Subject</div>
+
+      <!-- Biology -->
+      <div class="sb-row active" id="navBiology" onclick="navAction('biology')" title="Biology — Campbell">
+        <div class="sb-row-icon" style="color:var(--accent-amber)">
+          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        </div>
+        <span class="sb-row-label">Biology</span>
+        <span class="sb-row-badge">Campbell</span>
+      </div>
+
+      <div class="sb-div"></div>
+
+      <!-- Sources & Figures — teal — TOGGLE -->
+      <div class="sb-row" id="citNavRow" onclick="navAction('sources')" title="Sources &amp; Figures" style="position:relative">
+        <div class="sb-row-icon" style="color:var(--accent-teal)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        </div>
+        <span class="sb-row-label">Sources &amp; Figures</span>
+        <span class="sb-row-badge" id="citCount" style="display:none">0</span>
+        <div class="cit-icon-dot" id="citDot"></div>
+      </div>
+
+      <!-- Artifacts — Claude-style multi-shape icon — TOGGLE -->
+      <div class="sb-row" id="navArtifacts" onclick="navAction('artifacts')" title="Artifacts &amp; Resources">
+        <div class="sb-row-icon" style="color:var(--accent-amber)">
+          <!--
+            Claude-inspired artifacts icon:
+            A composition of four different small shapes representing
+            mixed content types (text, image, code, data) — not a folder.
+            Top-left: rounded square (document/text)
+            Top-right: circle (image/media)
+            Bottom-left: triangle-ish (data/chart)
+            Bottom-right: diamond (code/structured)
+          -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <circle cx="18" cy="6.5" r="3.5"/>
+            <path d="M6.5 14 3.5 19 9.5 19z"/>
+            <rect x="13" y="13" width="7" height="7" rx="1" transform="rotate(45 16.5 16.5)" style="transform-origin:16.5px 16.5px"/>
+          </svg>
+        </div>
+        <span class="sb-row-label">Artifacts</span>
+      </div>
+
+      <!-- Flashcard Deck — SESSION D — orange accent -->
+      <div class="sb-row" id="navFlashcards" onclick="navAction('flashcards')" title="Flashcard Deck">
+        <div class="sb-row-icon" style="color:var(--accent-orange)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+        </div>
+        <span class="sb-row-label">Flashcards</span>
+        <span class="sb-row-badge" id="flashcardBadge" style="display:none">0</span>
+      </div>
+
+      <!-- Scholar Dashboard — SESSION E — rose accent -->
+      <div class="sb-row" id="navDashboard" onclick="navAction('dashboard')" title="Scholar Dashboard">
+        <div class="sb-row-icon" style="color:var(--accent-rose)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-7 10 7M4 12v8a1 1 0 001 1h4v-5h6v5h4a1 1 0 001-1v-8"/>
+          </svg>
+        </div>
+        <span class="sb-row-label">Scholar Dashboard</span>
+      </div>
+
+      <!-- Collapsed-mode single clock icon -->
+      <div class="sb-row" id="recentIconRow" style="display:none" title="Recent sessions">
+        <div class="sb-row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      </div>
+      <div id="recentList">
+        <div class="recent-skeleton" style="width:80%"></div>
+        <div class="recent-skeleton" style="width:60%"></div>
+        <div class="recent-skeleton" style="width:72%"></div>
+      </div>
+
+      <div class="sb-div"></div>
+
+      <!-- Add reference — violet -->
+      <div class="sb-row" id="navAddRef" onclick="openDocModal()" title="Add reference document">
+        <div class="sb-row-icon" style="color:var(--accent-violet)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="13" x2="12" y2="19"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+        </div>
+        <span class="sb-row-label">Add reference</span>
+        <span class="sb-row-badge" id="activeDocBadge">Campbell</span>
+      </div>
+
+    </div><!-- /sb-icon-nav -->
+
+    <!-- Footer -->
+    <div class="sb-footer">
+      <div class="soc-row">
+        <div class="soc-icon" title="Socratic assist">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="soc-text">
+          <div class="soc-name">Socratic assist</div>
+          <div class="soc-desc" id="socDesc">Direct answers on</div>
+        </div>
+        <div class="soc-toggle-wrap">
+          <div class="toggle off" id="socToggle" onclick="toggleSocratic()"></div>
+        </div>
+      </div>
+      <div class="sb-avatar-row" title="Student profile">
+        <div class="sb-avatar" id="avatarBadge">S</div>
+        <span class="sb-avatar-label" id="avatarLabel">Student</span>
+      </div>
+    </div>
+  </div><!-- /sidebar -->
+
+  <!-- ──── CITATIONS PANEL ─────────────────────────── -->
+  <div id="citPanel">
+    <div class="cit-panel-inner" id="citPanelInner">
+      <div class="cit-panel-header">
+        <span class="cit-panel-title">Sources &amp; Figures</span>
+        <!-- Back button — returns to previous view -->
+
+      </div>
+      <div id="citPanelContent">
+        <div style="font-size:12px;color:var(--fg3);font-style:italic">Ask a question — cited sources and figures will appear here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──── ARTIFACTS PAGE ──────────────────────────── -->
+  <div id="artifactsPage">
+    <!-- Consistent page topbar with back-to-chat -->
+    <div class="page-topbar">
+
+      <span class="page-topbar-title">Artifacts &amp; Resources</span>
+    </div>
+    <div class="artifacts-body">
+      <div class="artifacts-header-text">
+        <div class="artifacts-title">Your Study Materials</div>
+        <div class="artifacts-sub">Notes, documents, past papers, and resources — all in one place.</div>
+      </div>
+      <div class="artifacts-grid">
+        <div class="artifact-card">
+          <div class="artifact-card-icon" style="background:rgba(74,158,255,0.12);color:var(--accent-blue)">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div class="artifact-card-name">Personal Notes</div>
+          <div class="artifact-card-desc">Text and audio notes from your study sessions.</div>
+          <div class="artifact-card-badge">Coming v1.2</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-card-icon" style="background:rgba(232,160,74,0.12);color:var(--accent-amber)">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="artifact-card-name">Past Papers</div>
+          <div class="artifact-card-desc">Upload and search through past exam papers.</div>
+          <div class="artifact-card-badge">Coming v1.2</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-card-icon" style="background:rgba(157,127,232,0.12);color:var(--accent-violet)">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="artifact-card-name">Pamphlets &amp; Handouts</div>
+          <div class="artifact-card-desc">Lecture handouts and study guides.</div>
+          <div class="artifact-card-badge">Coming v1.2</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-card-icon" style="background:rgba(77,201,168,0.12);color:var(--accent-teal)">
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          </div>
+          <div class="artifact-card-name">Session Summaries</div>
+          <div class="artifact-card-desc">Auto-generated summaries from your Orelia sessions.</div>
+          <div class="artifact-card-badge">Coming v1.2</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-card-icon" style="background:rgba(232,120,74,0.12);color:var(--accent-orange)">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="artifact-card-name">Flashcard Decks</div>
+          <div class="artifact-card-desc">Review decks generated from your sessions.</div>
+          <div class="artifact-card-badge">Coming v1.2</div>
+        </div>
+        <div class="artifact-card">
+          <div class="artifact-card-icon" style="background:rgba(138,158,138,0.12);color:var(--fg2)">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="artifact-card-name">More coming soon</div>
+          <div class="artifact-card-desc">Audio notes, diagrams, video bookmarks in future updates.</div>
+          <div class="artifact-card-badge">Planned</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──── NEW CHAT SCREEN (fixed overlay) ──────────── -->
+  <div id="newChatScreen">
+    <!-- Greeting -->
+    <div class="welcome-greeting">
+      <svg class="welcome-asterisk" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <line x1="12" y1="2"  x2="12" y2="22"/>
+        <line x1="2"  y1="12" x2="22" y2="12"/>
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+        <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
+      </svg>
+      <div class="welcome-wordmark" id="welcomeGreetingText">Good morning, <span class="welcome-scholar">Scholar</span></div>
+    </div>
+
+    <!-- Input box with glow wrapper -->
+    <div class="nc-input-wrap">
+      <div class="nc-glow-wrap" id="ncGlowWrap">
+      <div class="input-float" id="ncInputFloat">
+        <textarea class="input-field" id="ncInputField"
+          placeholder="What can I help you in?" rows="1"
+          onkeydown="handleNcKey(event)" oninput="autoResize(this)"
+          onfocus="ncInputFocus()" onblur="ncInputBlur()"></textarea>
+        <div class="input-bottom-row">
+          <div class="input-left-row">
+            <span class="input-hint">Enter to send · Shift+Enter new line</span>
+          </div>
+          <div class="input-right-row">
+            <div class="model-pill" title="Model — Orelia α">
+              <span>Orelia</span><span class="model-alpha">α</span>
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <button class="send-btn" id="ncSendBtn" onclick="ncSend()">
+              <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      </div><!-- /nc-glow-wrap -->
+    </div>
+
+    <!-- Suggestion chips below input -->
+    <div class="welcome-chips-dock">
+      <div class="welcome-chip" onclick="ncInsert('Explain osmosis and diffusion')">
+        <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 015 5v3a5 5 0 01-10 0V7a5 5 0 015-5z"/><path d="M2 16c0-4 4-6 10-6s10 2 10 6"/></svg>Osmosis &amp; diffusion
+      </div>
+      <div class="welcome-chip" onclick="ncInsert('What is DNA replication?')">
+        <svg viewBox="0 0 24 24"><path d="M2 4c0 0 2 0 4 4s4 8 8 8 4-4 4-4M22 4c0 0-2 0-4 4s-4 8-8 8-4-4-4-4"/></svg>DNA replication
+      </div>
+      <div class="welcome-chip" onclick="ncInsert('Compare mitosis and meiosis')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>Mitosis vs meiosis
+      </div>
+      <div class="welcome-chip" onclick="ncInsert('How does cellular respiration work?')">
+        <svg viewBox="0 0 24 24"><path d="M2 12h20M2 12c0-5.52 4.48-10 10-10s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12z"/><path d="M12 2c2.5 2.5 4 6.13 4 10s-1.5 7.5-4 10M12 2c-2.5 2.5-4 6.13-4 10s1.5 7.5 4 10"/></svg>Cellular respiration
+      </div>
+      <div class="welcome-chip" onclick="ncInsert('Explain natural selection')">
+        <svg viewBox="0 0 24 24"><path d="M21 3L9 15M21 3l-6.5 18L9 15m12-12L3 9.5 9 15"/></svg>Natural selection
+      </div>
+    </div>
+  </div><!-- /newChatScreen -->
+
+  <!-- ──── MAIN CHAT COLUMN ────────────────────────── -->
+  <div class="main-col" id="mainCol">
+    <div class="topbar">
+      <div><div class="t-title" id="topTitle">Campbell Biology</div></div>
+      <div class="topbar-right">
+        <div class="source-chips" id="sourceChips"></div>
+        <button class="add-doc-btn" onclick="openDocModal()" title="Add reference">+</button>
+      </div>
+    </div>
+
+    <div class="msgs-wrap">
+      <div class="messages" id="messages">
+        <!-- chat feed starts empty — welcome removed -->
+      </div>
+      <div id="scrollBtn" onclick="scrollToBottom()">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <div class="input-dock">
+      <div class="input-float" id="inputFloat">
+        <textarea class="input-field" id="inputField"
+          placeholder="What can I help you in?" rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"
+          onfocus="onInputFocus()" onblur="onInputBlur()"></textarea>
+        <div class="input-bottom-row">
+          <div class="input-left-row">
+            <span class="input-hint" id="inputHint">Enter to send · Shift+Enter new line</span>
+          </div>
+          <div class="input-right-row">
+            <div class="model-pill" title="Model — Orelia α (placeholder)">
+              <span>Orelia</span><span class="model-alpha">α</span>
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+              <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /main-col -->
+
+  <!-- ──── FLASHCARD DECK PAGE — SESSION D ──────────── -->
+  <!-- BACKEND NOTE: Flashcards are stored in localStorage keyed by session.
+       Future: POST /api/flashcards to persist server-side and sync across devices.
+       Card generation calls /api/chat with a special generation prompt. -->
+  <div id="flashcardsPage">
+    <div class="page-topbar">
+
+      <span class="page-topbar-title">Flashcard Deck</span>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button class="fc-topbar-btn" id="fcGenerateBtn" onclick="generateFlashcards()" title="Generate cards from current session">
+          <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          Generate from session
+        </button>
+        <button class="fc-topbar-btn fc-topbar-btn-ghost" onclick="clearDeck()" title="Clear deck">Clear deck</button>
+      </div>
+    </div>
+
+    <!-- Split layout: deck on left, chat on right -->
+    <div class="fc-split">
+
+      <!-- ── LEFT: Card viewer ── -->
+      <div class="fc-deck-pane" id="fcDeckPane">
+
+        <!-- Empty state -->
+        <div class="fc-empty" id="fcEmpty">
+          <div class="fc-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" width="40" height="40">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <div class="fc-empty-title">No cards yet</div>
+          <div class="fc-empty-sub">Click <strong>Generate from session</strong> to create flashcards from your current study session, or type a topic below in the chat and ask Orelia to create cards.</div>
+        </div>
+
+        <!-- Card viewer (hidden until cards exist) -->
+        <div class="fc-viewer" id="fcViewer" style="display:none">
+          <!-- Progress bar -->
+          <div class="fc-progress-wrap">
+            <div class="fc-progress-bar">
+              <div class="fc-progress-fill" id="fcProgressFill"></div>
+            </div>
+            <span class="fc-progress-label" id="fcProgressLabel">0 / 0</span>
+          </div>
+
+          <!-- The card itself — click to flip -->
+          <div class="fc-card-wrap" id="fcCardWrap" onclick="flipCard()">
+            <div class="fc-card" id="fcCard">
+              <div class="fc-card-front" id="fcCardFront">
+                <div class="fc-card-side-label">Question</div>
+                <div class="fc-card-text" id="fcCardQ"></div>
+                <div class="fc-flip-hint">Tap to reveal answer</div>
+              </div>
+              <div class="fc-card-back" id="fcCardBack">
+                <div class="fc-card-side-label">Answer</div>
+                <div class="fc-card-text md-body" id="fcCardA"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rating buttons -->
+          <div class="fc-rating" id="fcRating" style="display:none">
+            <button class="fc-rate-btn fc-rate-again" onclick="rateCard('again')">
+              <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+              Again
+            </button>
+            <button class="fc-rate-btn fc-rate-almost" onclick="rateCard('almost')">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Almost
+            </button>
+            <button class="fc-rate-btn fc-rate-got" onclick="rateCard('got')">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Got it
+            </button>
+          </div>
+
+          <!-- Navigation -->
+          <div class="fc-nav">
+            <button class="fc-nav-btn" id="fcPrevBtn" onclick="prevCard()">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="fc-nav-label" id="fcNavLabel">Card 1 of 0</span>
+            <button class="fc-nav-btn" id="fcNextBtn" onclick="nextCard()">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Session complete state -->
+        <div class="fc-complete" id="fcComplete" style="display:none">
+          <div class="fc-complete-emoji">🎉</div>
+          <div class="fc-complete-title">Session complete!</div>
+          <div class="fc-complete-stats" id="fcCompleteStats"></div>
+          <div class="fc-complete-actions">
+            <button class="fc-action-btn" onclick="restartDeck()">Review again</button>
+            <button class="fc-action-btn fc-action-ghost" onclick="reviewWeak()">Review weak only</button>
+          </div>
+        </div>
+      </div><!-- /fc-deck-pane -->
+
+      <!-- Drag handle — resize split -->
+      <div class="fc-drag-handle" id="fcDragHandle"></div>
+
+      <!-- ── RIGHT: Live Orelia chat (split) ── -->
+      <div class="fc-chat-pane" id="fcChatPane">
+        <div class="fc-chat-header">
+          <div class="fc-chat-title">Ask Orelia</div>
+          <div class="fc-chat-sub" id="fcChatContext">Ask about any card or concept</div>
+        </div>
+        <!-- Reuses the same messages feed pattern — separate mini-feed -->
+        <div class="fc-messages" id="fcMessages">
+          <div class="fc-welcome-msg">
+            Ask me anything about the cards in this deck. I know which card you're on and can give targeted explanations.
+          </div>
+        </div>
+        <div class="fc-input-wrap">
+          <textarea class="fc-input-field" id="fcInputField"
+            placeholder="Ask about this card…" rows="1"
+            onkeydown="handleFcKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="fc-send-btn" id="fcSendBtn" onclick="sendFcMessage()">
+            <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /fc-split -->
+  </div><!-- /flashcardsPage -->
+
+  <!-- ──── SCHOLAR DASHBOARD — SESSION E ───────────── -->
+  <div id="dashboardPage">
+
+    <!-- Tab bar -->
+    <div class="dash-tabbar">
+      <button class="dash-tab active" id="dtab-overview"  onclick="switchDashTab('overview')">Overview</button>
+      <button class="dash-tab"        id="dtab-calendar"  onclick="switchDashTab('calendar')">Calendar</button>
+      <button class="dash-tab"        id="dtab-modes"     onclick="switchDashTab('modes')">Study Modes</button>
+      <button class="dash-tab"        id="dtab-progress"  onclick="switchDashTab('progress')">Progress</button>
+      <div class="dash-tab-spacer"></div>
+
+    </div>
+
+    <!-- Tab contents -->
+    <div class="dash-body">
+
+      <!-- ══ TAB: OVERVIEW ══ -->
+      <div class="dash-panel active" id="dpanel-overview">
+
+        <!-- Greeting -->
+        <div class="dash-greeting" id="dashGreeting">
+          <div class="dash-greeting-title">Good morning, Scholar.</div>
+          <div class="dash-greeting-sub" id="dashGreetingSub">Keep the streak going — you're on a roll.</div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="dash-stats-row">
+          <div class="dash-stat-card" id="statStreak">
+            <div class="dash-stat-icon">🔥</div>
+            <div class="dash-stat-val" id="streakCount">0</div>
+            <div class="dash-stat-label">Day streak</div>
+          </div>
+          <div class="dash-stat-card" id="statHours">
+            <div class="dash-stat-icon">⏱</div>
+            <div class="dash-stat-val" id="hoursCount">0h</div>
+            <div class="dash-stat-label">This week</div>
+          </div>
+          <div class="dash-stat-card" id="statCards">
+            <div class="dash-stat-icon">🃏</div>
+            <div class="dash-stat-val" id="cardsCount">0</div>
+            <div class="dash-stat-label">Cards reviewed</div>
+          </div>
+          <div class="dash-stat-card" id="statSessions">
+            <div class="dash-stat-icon">💬</div>
+            <div class="dash-stat-val" id="sessionsCount">0</div>
+            <div class="dash-stat-label">Sessions</div>
+          </div>
+        </div>
+
+        <!-- Syllabus coverage -->
+        <div class="dash-section-label">Syllabus Coverage</div>
+        <div class="dash-coverage-list" id="dashCoverage">
+          <div class="dash-coverage-row">
+            <span class="dash-coverage-name">Biology — Campbell</span>
+            <div class="dash-coverage-bar"><div class="dash-coverage-fill" style="width:38%;background:var(--accent-amber)"></div></div>
+            <span class="dash-coverage-pct">38%</span>
+          </div>
+        </div>
+
+        <!-- Topic mastery pills -->
+        <div class="dash-section-label">Topic Mastery</div>
+        <div class="dash-mastery-grid" id="dashMastery">
+          <!-- Generated by JS -->
+          <div class="dash-mastery-pill mastery-green">Osmosis</div>
+          <div class="dash-mastery-pill mastery-green">Cell Structure</div>
+          <div class="dash-mastery-pill mastery-amber">DNA Replication</div>
+          <div class="dash-mastery-pill mastery-amber">Mitosis</div>
+          <div class="dash-mastery-pill mastery-rose">Meiosis</div>
+          <div class="dash-mastery-pill mastery-rose">Gene Expression</div>
+          <div class="dash-mastery-pill mastery-grey">Ecology</div>
+          <div class="dash-mastery-pill mastery-grey">Evolution</div>
+        </div>
+
+        <!-- Awards shelf -->
+        <div class="dash-section-label">Awards</div>
+        <div class="dash-awards-row" id="dashAwards">
+          <div class="dash-award earned" title="First session completed">
+            <div class="dash-award-icon">🌱</div>
+            <div class="dash-award-name">First Steps</div>
+          </div>
+          <div class="dash-award earned" title="3-day streak">
+            <div class="dash-award-icon">🔥</div>
+            <div class="dash-award-name">On Fire</div>
+          </div>
+          <div class="dash-award locked" title="Complete 10 sessions">
+            <div class="dash-award-icon">🔒</div>
+            <div class="dash-award-name">10 Sessions</div>
+          </div>
+          <div class="dash-award locked" title="Master 5 topics">
+            <div class="dash-award-icon">🔒</div>
+            <div class="dash-award-name">Expert</div>
+          </div>
+          <div class="dash-award locked" title="7-day streak">
+            <div class="dash-award-icon">🔒</div>
+            <div class="dash-award-name">Week Warrior</div>
+          </div>
+          <div class="dash-award locked" title="Complete 50 flashcards">
+            <div class="dash-award-icon">🔒</div>
+            <div class="dash-award-name">Card Master</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: CALENDAR (GitHub heatmap style) ══ -->
+      <div class="dash-panel" id="dpanel-calendar">
+        <div class="dash-section-label" style="margin-top:0">Study Activity — Last 16 Weeks</div>
+        <div class="cal-heatmap-wrap">
+          <div class="cal-heatmap" id="calHeatmap"><!-- built by JS --></div>
+          <div class="cal-legend">
+            <span class="cal-legend-label">Less</span>
+            <div class="cal-legend-cell" style="background:var(--ink3)"></div>
+            <div class="cal-legend-cell" style="background:#264426"></div>
+            <div class="cal-legend-cell" style="background:#3d6b3d"></div>
+            <div class="cal-legend-cell" style="background:#5a8a5a"></div>
+            <div class="cal-legend-cell" style="background:#8dc88d"></div>
+            <span class="cal-legend-label">More</span>
+          </div>
+        </div>
+        <div class="dash-section-label">Upcoming Reviews</div>
+        <div class="dash-upcoming-list" id="dashUpcoming">
+          <div class="dash-upcoming-empty">No scheduled reviews yet. Complete a flashcard session to schedule spaced repetition.</div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: STUDY MODES ══ -->
+      <div class="dash-panel" id="dpanel-modes">
+        <div class="dash-modes-intro">Choose a study mode. Orelia will guide you through it.</div>
+        <div class="dash-modes-grid">
+
+          <div class="dash-mode-card" onclick="launchMode('quickcheck')">
+            <div class="dash-mode-icon" style="background:rgba(77,201,168,0.12);color:var(--accent-teal)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div class="dash-mode-name">Quick Check</div>
+            <div class="dash-mode-desc">5 questions · 5 minutes · Random topics from studied content</div>
+            <div class="dash-mode-tag">Daily warm-up</div>
+          </div>
+
+          <div class="dash-mode-card" onclick="launchMode('topicquiz')">
+            <div class="dash-mode-icon" style="background:rgba(74,158,255,0.12);color:var(--accent-blue)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="dash-mode-name">Topic Quiz</div>
+            <div class="dash-mode-desc">10–15 questions on a chosen chapter or concept</div>
+            <div class="dash-mode-tag">Focused study</div>
+          </div>
+
+          <div class="dash-mode-card" onclick="launchMode('fullexam')">
+            <div class="dash-mode-icon" style="background:rgba(232,120,74,0.12);color:var(--accent-orange)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div class="dash-mode-name">Full Exam</div>
+            <div class="dash-mode-desc">Complete exam paper based on your syllabus coverage and weak areas</div>
+            <div class="dash-mode-tag">Exam prep</div>
+          </div>
+
+          <div class="dash-mode-card" onclick="navAction('flashcards')">
+            <div class="dash-mode-icon" style="background:rgba(232,122,122,0.12);color:var(--accent-rose)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
+            <div class="dash-mode-name">Flashcard Review</div>
+            <div class="dash-mode-desc">Review your saved decks with spaced repetition and live Orelia help</div>
+            <div class="dash-mode-tag">Memory</div>
+          </div>
+
+          <div class="dash-mode-card" onclick="launchMode('socratic')">
+            <div class="dash-mode-icon" style="background:rgba(157,127,232,0.12);color:var(--accent-violet)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div class="dash-mode-name">Socratic Deep-Dive</div>
+            <div class="dash-mode-desc">Orelia guides you through reasoning — no direct answers, pure understanding</div>
+            <div class="dash-mode-tag">Conceptual</div>
+          </div>
+
+          <div class="dash-mode-card" onclick="launchMode('planner')">
+            <div class="dash-mode-icon" style="background:rgba(232,160,74,0.12);color:var(--accent-amber)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="dash-mode-name">Exam Prep Planner</div>
+            <div class="dash-mode-desc">Enter your exam date — Orelia builds a day-by-day study plan</div>
+            <div class="dash-mode-tag">Planning</div>
+          </div>
+
+        </div>
+
+        <!-- Active mode area (shown when a mode is launched) -->
+        <div class="dash-mode-active" id="dashModeActive" style="display:none">
+          <div class="dash-mode-active-header">
+            <span class="dash-mode-active-title" id="dashModeTitle">Quick Check</span>
+
+          </div>
+          <div class="dash-mode-messages" id="dashModeMessages"></div>
+          <div class="dash-mode-input-wrap">
+            <textarea class="fc-input-field" id="dashModeInput"
+              placeholder="Your answer…" rows="1"
+              onkeydown="handleModeKey(event)" oninput="autoResize(this)"></textarea>
+            <button class="fc-send-btn" id="dashModeSendBtn" onclick="sendModeMessage()">
+              <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: PROGRESS ══ -->
+      <div class="dash-panel" id="dpanel-progress">
+
+        <div class="dash-progress-grid">
+          <!-- Mastery wheels — per topic -->
+          <div class="dash-progress-section">
+            <div class="dash-section-label" style="margin-top:0">Topic Mastery Wheels</div>
+            <div class="dash-wheels-row" id="dashWheels"><!-- built by JS --></div>
+          </div>
+
+          <!-- Active hours bar chart -->
+          <div class="dash-progress-section">
+            <div class="dash-section-label" style="margin-top:0">Daily Active Hours (This Week)</div>
+            <div class="dash-bar-chart" id="dashBarChart"><!-- built by JS --></div>
+          </div>
+        </div>
+
+        <!-- Recent sessions list -->
+        <div class="dash-section-label">Recent Sessions</div>
+        <div class="dash-sessions-list" id="dashSessionsList">
+          <div style="font-size:12px;color:var(--fg3);font-style:italic">No sessions recorded yet. Start studying!</div>
+        </div>
+      </div>
+
+    </div><!-- /dash-body -->
+
+    <!-- Floating Orelia button — always available in dashboard -->
+    <div class="orelia-float-btn" id="orelihFloatBtn" onclick="toggleOrelihTray()">
+      <!-- Orelia asterisk mark -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round">
+        <line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+        <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
+      </svg>
+    </div>
+
+    <!-- Orelia chat tray (slides up from bottom) -->
+    <div class="orelia-tray" id="orelihTray">
+      <div class="orelia-tray-header">
+        <span class="orelia-tray-title">Ask Orelia</span>
+        <button class="nav-icon-btn" onclick="toggleOrelihTray()" title="Close tray" style="width:26px;height:26px;opacity:0.7">
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+      </div>
+      <div class="orelia-tray-msgs" id="orelihTrayMsgs">
+        <div class="fc-welcome-msg">I can see your dashboard. Ask me anything — about your progress, a weak topic, or what to study next.</div>
+      </div>
+      <div class="dash-mode-input-wrap">
+        <textarea class="fc-input-field" id="orelihInput"
+          placeholder="Ask Orelia…" rows="1"
+          onkeydown="handleOrelihKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="fc-send-btn" id="orelihSendBtn" onclick="sendOrelihMsg()">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /dashboardPage -->
+
+</div><!-- /app -->
+
+<div class="copy-toast" id="copyToast">Copied</div>
+
+<!-- DOC MODAL -->
+<div class="modal-overlay" id="docModal" onclick="handleModalClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div><div class="modal-title">Active references</div><div class="modal-sub">Select textbooks to include in retrieval</div></div>
+      <button class="modal-close" onclick="closeDocModal()">×</button>
+    </div>
+    <div class="modal-body" id="docList"><div class="empty-state">Loading…</div></div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt=""/>
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG
+   BACKEND NOTE: change API_BASE to your deployed URL in production
+═══════════════════════════════════════════════════════ */
+const API_BASE = 'http://127.0.0.1:8000';
+
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+const state = {
+  sessionId       : crypto.randomUUID(),
+  history         : [],
+  socratic        : false,  /* Direct chat is default — Socratic off */
+  loading         : false,
+  chatStarted     : false,
+  currentView     : 'chat',       // 'chat' | 'artifacts' | 'flashcards'
+  prevView        : 'chat',
+  citOpen         : false,
+  /* Sidebar states */
+  sbState         : 'pinned',
+  allCitations    : [],
+  /* ── Session D: Flashcard state ──────────────────────────────
+     BACKEND NOTE: deck stored in localStorage per session.
+     Future: POST /api/flashcards for server persistence. */
+  deck            : [],     // [{id,q,a,status:'new'|'again'|'almost'|'got'}]
+  deckIdx         : 0,
+  deckFlipped     : false,
+  fcHistory       : [],     // separate chat history for the deck chat pane
+  allImages       : [],
+  /* BACKEND NOTE: when multi-source retrieval is built in pinecone_db.py,
+     send this full array as `namespaces` to /api/chat */
+  activeNamespaces: [
+    { id:'campbell-biology-12e', title:'Campbell Biology', namespace:'campbell-biology-cohere', subject:'bio' }
+  ],
+  documents: [],
+};
+
+let userScrolledUp = false;
+let sbHoverTimer   = null;   /* debounce for sidebar hover */
+
+/* ═══════════════════════════════════════════════════════
+   SPLASH
+═══════════════════════════════════════════════════════ */
+function runSplash() {
+  const chars  = document.querySelectorAll('.splash-char');
+  const sub    = document.getElementById('splashSub');
+  const bar    = document.getElementById('splashBar');
+  const splash = document.getElementById('splash');
+  const app    = document.getElementById('app');
+
+  chars.forEach((ch,i) => setTimeout(() => ch.classList.add('in'), 180 + i * 80));
+  setTimeout(() => sub.classList.add('in'), 180 + chars.length * 80 + 300);
+
+  let pct = 0;
+  const iv = setInterval(() => { pct = Math.min(100, pct+1.4); bar.style.width = pct+'%'; if(pct>=100) clearInterval(iv); }, 55);
+
+  setTimeout(() => {
+    chars.forEach(ch => { ch.style.transition = 'opacity .45s ease, transform .45s ease'; ch.style.opacity='0'; ch.style.transform='translateY(-10px)'; });
+    sub.style.transition = 'opacity .4s ease'; sub.style.opacity = '0';
+  }, 3600);
+
+  setTimeout(() => {
+    splash.classList.add('fade-out'); app.classList.add('show');
+    /* welcome-time removed */
+    renderSourceChips();
+    setWelcomeGreeting();
+    /* Start rotating halo glow after app appears */
+    setTimeout(() => {
+      const wrap = document.getElementById('ncGlowWrap');
+      if (wrap) wrap.classList.add('glow-on');
+    }, 600);
+    setTimeout(() => splash.style.display='none', 950);
+  }, 4200);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  runSplash();
+  setTimeout(() => { loadDocuments(); loadSessions(); }, 600);
+
+  /* Scroll lock */
+  const feed = document.getElementById('messages');
+  feed.addEventListener('scroll', () => {
+    const dist = feed.scrollHeight - feed.scrollTop - feed.clientHeight;
+    userScrolledUp = dist > 80;
+    document.getElementById('scrollBtn').classList.toggle('visible', dist > 120);
+  });
+
+  /* Sidebar hover DISABLED — hamburger click only */
+  const sb = document.getElementById('sidebar');
+
+
+  /* Auto-focus: any keypress on the chat page types into the input immediately */
+  document.addEventListener('keydown', (e) => {
+    /* Ignore modifier-only, special keys, and when focus is already in an input */
+    const tag = document.activeElement?.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length !== 1) return; /* not a printable character */
+    /* Route to the visible input */
+    const ncs = document.getElementById('newChatScreen');
+    const ncField = document.getElementById('ncInputField');
+    const mainField = document.getElementById('inputField');
+    if (ncs && !ncs.classList.contains('gone') && !ncs.classList.contains('hiding')) {
+      ncField?.focus();
+    } else {
+      mainField?.focus();
+    }
+  });
+
+  /* Focus nc input after splash */
+  setTimeout(() => {
+    const ncf = document.getElementById('ncInputField');
+    if (ncf) ncf.focus();
+  }, 4500);
+});
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR — THREE-STATE MANAGEMENT
+═══════════════════════════════════════════════════════ */
+/* toggleCitPanel alias — kept for backward compat */
+function toggleCitPanel() { navAction('sources'); }
+
+/* ── Global sidebar hover functions — called by ribbon hover and sidebar hover ── */
+/* Hover expansion DISABLED — click hamburger to expand */
+function sidebarHoverIn()  { /* no-op */ }
+function sidebarHoverOut() { /* no-op */ }
+
+/* ── Left-edge hover in new-chat state ──
+   Moving cursor to the left edge fades in the thin sidebar rail.
+   Moving away hides it again. This only fires in app-new-chat mode. */
+let ncEdgeTimer = null;
+function ncLeftEdgeEnter() {
+  /* Only active during new-chat — fades sidebar rail to full visibility */
+  if (!document.getElementById('app').classList.contains('app-new-chat')) return;
+  clearTimeout(ncEdgeTimer);
+  ncEdgeTimer = setTimeout(() => {
+    document.getElementById('sidebar').classList.add('nc-sidebar-peek');
+  }, 80);
+}
+function ncLeftEdgeLeave() {
+  if (!document.getElementById('app').classList.contains('app-new-chat')) return;
+  clearTimeout(ncEdgeTimer);
+  ncEdgeTimer = setTimeout(() => {
+    document.getElementById('sidebar').classList.remove('nc-sidebar-peek');
+  }, 350);
+}
+
+function handleHamburger() {
+  const sb  = document.getElementById('sidebar');
+  const app = document.getElementById('app');
+  clearTimeout(sbHoverTimer);
+  clearTimeout(ncEdgeTimer);
+
+  if (state.sbState === 'pinned') {
+    /* pinned → collapsed */
+    state.sbState = 'collapsed';
+    sb.classList.remove('hover-exp', 'nc-sidebar-peek');
+    sb.classList.add('collapsed');
+    document.getElementById('recentIconRow').style.display = 'flex';
+    document.getElementById('recentList').style.display    = 'none';
+
+  } else {
+    /* collapsed (including new-chat peek state) → pin open */
+    state.sbState = 'pinned';
+    sb.classList.remove('collapsed', 'hover-exp', 'nc-sidebar-peek');
+
+    /* If in new-chat, exit the overlay and reveal the full chat interface */
+    const isNewChat = app.classList.contains('app-new-chat');
+    if (isNewChat) {
+      /* Transfer any text typed in nc input to the real input */
+      const ncField   = document.getElementById('ncInputField');
+      const realField = document.getElementById('inputField');
+      if (ncField && realField && ncField.value.trim()) {
+        realField.value = ncField.value;
+        autoResize(realField);
+      }
+      /* Exit new-chat mode — same smooth reveal as activateChat() */
+      const ncs = document.getElementById('newChatScreen');
+      ncs.classList.add('nc-sending');
+      const wrap = document.getElementById('ncGlowWrap');
+      if (wrap) { wrap.classList.remove('glow-on'); wrap.classList.add('glow-done'); }
+
+      setTimeout(() => {
+        ncs.classList.add('nc-bg-fade');
+        const msgs = document.getElementById('messages');
+        if (msgs) msgs.classList.add('fade-in');
+      }, 180);
+
+      setTimeout(() => {
+        app.classList.remove('app-new-chat');
+        /* sidebar is already pinned — it slides into view naturally */
+        const dock = document.querySelector('.input-dock');
+        if (dock) dock.classList.add('settled');
+      }, 320);
+
+      setTimeout(() => {
+        ncs.classList.add('gone');
+        document.getElementById('inputField')?.focus();
+      }, 560);
+
+      /* Mark chat as started so next send goes to real flow */
+      state.chatStarted = true;
+    }
+
+    document.getElementById('recentIconRow').style.display = 'none';
+    document.getElementById('recentList').style.display    = '';
+  }
+}
+
+
+
+/* ═══════════════════════════════════════════════════════
+   UNIFIED NAV ACTION — handles toggle behavior
+   Clicking an active feature icon COLLAPSES that feature.
+   Clicking an inactive icon ACTIVATES it.
+   This is the single source of truth for all navigation.
+═══════════════════════════════════════════════════════ */
+function navAction(action) {
+  switch(action) {
+
+    case 'newSession':
+      /* Always starts a fresh chat — never toggles */
+      newSession();
+      break;
+
+    case 'search':
+      /* Placeholder — activates chat for now */
+      if (state.currentView !== 'chat') switchView('chat');
+      break;
+
+    case 'biology':
+      /* Toggles between chat and biology (same as going to chat) */
+      if (state.currentView !== 'chat') {
+        switchView('chat');
+      }
+      /* If already on chat, nothing to toggle — biology is always the active subject */
+      break;
+
+    case 'sources':
+      /* TOGGLE: if sources panel is open → close it; if closed → open it */
+      if (state.citOpen) {
+        /* Close sources panel */
+        state.citOpen = false;
+        document.getElementById('citPanel').classList.remove('open');
+        document.getElementById('citNavRow').classList.remove('active');
+      } else {
+        /* Open sources panel, ensure chat is visible behind it */
+        if (state.currentView !== 'chat') switchView('chat');
+        state.citOpen = true;
+        document.getElementById('citPanel').classList.add('open');
+        document.getElementById('citNavRow').classList.add('active');
+      }
+      break;
+
+    case 'artifacts':
+      if (state.currentView === 'artifacts') {
+        switchView('chat');
+      } else {
+        if (state.citOpen) { state.citOpen=false; document.getElementById('citPanel').classList.remove('open'); document.getElementById('citNavRow').classList.remove('active'); }
+        switchView('artifacts');
+      }
+      break;
+
+    case 'flashcards':
+      if (state.currentView === 'flashcards') {
+        switchView('chat');
+      } else {
+        if (state.citOpen) { state.citOpen=false; document.getElementById('citPanel').classList.remove('open'); document.getElementById('citNavRow').classList.remove('active'); }
+        switchView('flashcards');
+      }
+      break;
+
+    case 'dashboard':
+      if (state.currentView === 'dashboard') {
+        switchView('chat');
+      } else {
+        if (state.citOpen) { state.citOpen=false; document.getElementById('citPanel').classList.remove('open'); document.getElementById('citNavRow').classList.remove('active'); }
+        switchView('dashboard');
+      }
+      break;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEW SWITCHER — chat ↔ artifacts (more views added SC–SE)
+═══════════════════════════════════════════════════════ */
+function switchView(view) {
+  state.prevView    = state.currentView;
+  state.currentView = view;
+  /* Push to nav history when navigating forward */
+
+
+  const mainCol        = document.getElementById('mainCol');
+  const artifactsPage  = document.getElementById('artifactsPage');
+  const flashcardsPage = document.getElementById('flashcardsPage');
+  const dashboardPage  = document.getElementById('dashboardPage');
+  const navArtifacts   = document.getElementById('navArtifacts');
+  const navBiology     = document.getElementById('navBiology');
+  const navFlashcards  = document.getElementById('navFlashcards');
+  const navDashboard   = document.getElementById('navDashboard');
+
+  [navArtifacts, navBiology, navFlashcards, navDashboard].forEach(el => el && el.classList.remove('active'));
+  mainCol.style.display = 'none';
+  artifactsPage.classList.remove('active');
+  flashcardsPage.classList.remove('active');
+  dashboardPage.classList.remove('active');
+
+  if (view === 'chat') {
+    mainCol.style.display = 'flex';
+    navBiology.classList.add('active');
+  } else if (view === 'artifacts') {
+    artifactsPage.classList.add('active');
+    navArtifacts.classList.add('active');
+  } else if (view === 'flashcards') {
+    flashcardsPage.classList.add('active');
+    navFlashcards.classList.add('active');
+    renderDeck();
+  } else if (view === 'dashboard') {
+    dashboardPage.classList.add('active');
+    navDashboard.classList.add('active');
+    loadDashboardData();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CHAT STARTED — dismiss new-chat overlay, reveal sidebar
+═══════════════════════════════════════════════════════ */
+function activateChat() {
+  if (state.chatStarted) return;
+  state.chatStarted = true;
+
+  const ncs  = document.getElementById('newChatScreen');
+  const wrap = document.getElementById('ncGlowWrap');
+  const dock = document.querySelector('.input-dock');
+  const msgs = document.getElementById('messages');
+  const app  = document.getElementById('app');
+
+  /* Phase 1 (0ms): greeting + chips slide out, glow accelerates */
+  ncs.classList.add('nc-sending');
+  if (wrap) { wrap.classList.remove('glow-on'); wrap.classList.add('glow-send'); }
+
+  /* Phase 2 (220ms): ncs background fades transparent, messages reveal */
+  setTimeout(() => {
+    ncs.classList.add('nc-bg-fade');
+    if (msgs) msgs.classList.add('fade-in');
+  }, 220);
+
+  /* Phase 3 (380ms): sidebar + real layout appear, input dock settles */
+  setTimeout(() => {
+    app.classList.remove('app-new-chat');
+    const sb = document.getElementById('sidebar');
+    sb.classList.remove('hover-exp', 'nc-sidebar-peek');
+    sb.classList.add('collapsed');
+    state.sbState = 'collapsed';
+    document.getElementById('recentIconRow').style.display = 'flex';
+    document.getElementById('recentList').style.display    = 'none';
+    if (dock) dock.classList.add('settled');
+  }, 380);
+
+  /* Phase 4 (650ms): glow fades out, overlay removed, focus real input */
+  setTimeout(() => {
+    if (wrap) { wrap.classList.remove('glow-send'); wrap.classList.add('glow-done'); }
+    ncs.classList.add('gone');
+    document.getElementById('inputField')?.focus();
+  }, 650);
+}
+
+function newSession() {
+  if (state.currentView !== 'chat') switchView('chat');
+  state.history       = [];
+  state.sessionId     = crypto.randomUUID();
+  state.allCitations  = [];
+  state.allImages     = [];
+  state.chatStarted   = false;
+  updateCitBadge();
+
+  // Show new-chat screen again — reset ALL state classes
+  const ncs = document.getElementById('newChatScreen');
+  ncs.classList.remove('gone', 'hiding', 'nc-sending', 'nc-bg-fade');
+  // Re-trigger chip animations
+  document.querySelectorAll('#newChatScreen .welcome-chip').forEach(c => {
+    c.style.animation = 'none';
+    void c.offsetWidth;
+    c.style.animation = '';
+  });
+  // Re-trigger looping glow
+  setTimeout(() => {
+    const wrap2 = document.getElementById('ncGlowWrap');
+    if (wrap2) { wrap2.classList.remove('glow-on','glow-send','glow-done'); void wrap2.offsetWidth; wrap2.classList.add('glow-on'); }
+  }, 180);
+
+  // ncs state already reset above
+  // Reset input dock
+  const dock2 = document.querySelector('.input-dock');
+  if (dock2) dock2.classList.remove('settled');
+  // Reset nc input
+  const ncField = document.getElementById('ncInputField');
+  if (ncField) { ncField.value = ''; ncField.style.height = 'auto'; }
+
+  // Keep sidebar in collapsed (thin rail) state on new session
+  document.getElementById('app').classList.add('app-new-chat');
+  const sb = document.getElementById('sidebar');
+  sb.classList.remove('hover-exp');
+  sb.classList.add('collapsed');
+  state.sbState = 'collapsed';
+  document.getElementById('recentIconRow').style.display = 'flex';
+  document.getElementById('recentList').style.display    = 'none';
+
+  setWelcomeGreeting();
+
+  // Focus the nc input
+  setTimeout(() => { document.getElementById('ncInputField')?.focus(); }, 200);
+
+  const feed = document.getElementById('messages');
+  while (feed.children.length > 1) feed.removeChild(feed.lastChild);
+  document.getElementById('citPanelContent').innerHTML =
+    '<div style="font-size:12px;color:var(--fg3);font-style:italic">Ask a question — cited sources and figures will appear here.</div>';
+}
+
+/* ═══════════════════════════════════════════════════════
+   TIME-BASED GREETING — "Evening, Scholar" etc.
+═══════════════════════════════════════════════════════ */
+function setWelcomeGreeting() {
+  const h = new Date().getHours();
+  let tod = 'Good morning';
+  if (h >= 12 && h < 17) tod = 'Good afternoon';
+  if (h >= 17 && h < 21) tod = 'Good evening';
+  if (h >= 21 || h < 4)  tod = 'Still studying?';
+  const el = document.getElementById('welcomeGreetingText');
+  if (el) el.innerHTML = tod + ', <span class="welcome-scholar">Scholar</span>';
+}
+
+/* nav history removed */
+
+/* New-chat screen input helpers */
+function ncInputFocus()  { document.getElementById('ncInputFloat')?.classList.add('focused'); }
+function ncInputBlur()   { document.getElementById('ncInputFloat')?.classList.remove('focused'); }
+function ncInsert(text)  {
+  const f = document.getElementById('ncInputField');
+  if (f) { f.value = text; autoResize(f); f.focus(); }
+}
+function handleNcKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ncSend(); }
+}
+function ncSend() {
+  const f = document.getElementById('ncInputField');
+  const q = f ? f.value.trim() : '';
+  if (!q) return;
+  // Transfer text to the real inputField and trigger send
+  const real = document.getElementById('inputField');
+  if (real) real.value = q;
+  // Hide new-chat overlay immediately (activateChat will be called by sendMessage)
+  sendMessage();
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   BACKEND NOTE: currently only state.activeNamespaces[0] is sent.
+/* ═══════════════════════════════════════════════════════
+   Multi-source: change /api/chat to accept namespaces[] array,
+/* ═══════════════════════════════════════════════════════
+   merge results in pinecone_db.search_chunks().
+═══════════════════════════════════════════════════════ */
+const SUBJECT_CLASS = { bio:'chip-bio', chem:'chip-chem', phys:'chip-phys', math:'chip-math' };
+const MAX_CHIPS = 3;
+
+function renderSourceChips() {
+  const c = document.getElementById('sourceChips');
+  if (!c) return;
+  const visible = state.activeNamespaces.slice(0, MAX_CHIPS);
+  const over    = state.activeNamespaces.length - MAX_CHIPS;
+  let html = visible.map(s => {
+    const cls = SUBJECT_CLASS[s.subject] || 'chip-bio';
+    const lbl = s.title.split(' ').slice(0,2).join(' ');
+    return `<div class="source-chip chip-active ${cls}" title="${esc(s.title)}">
+      <div class="chip-spine"></div>${esc(lbl)}
+    </div>`;
+  }).join('');
+  if (over > 0) html += `<div class="chip-overflow">+${over} more</div>`;
+  c.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CITATIONS PANEL
+═══════════════════════════════════════════════════════ */
+function updateCitBadge() {
+  const n = state.allCitations.length;
+  const countEl = document.getElementById('citCount');
+  const dotEl   = document.getElementById('citDot');
+  if (n > 0) { countEl.textContent=n; countEl.style.display=''; document.getElementById('citNavRow').classList.add('has-cit'); dotEl.style.opacity='1'; }
+  else { countEl.style.display='none'; document.getElementById('citNavRow').classList.remove('has-cit'); dotEl.style.opacity='0'; }
+}
+
+function buildCitPanel() {
+  const container = document.getElementById('citPanelContent');
+  if (!state.allCitations.length) { container.innerHTML = '<div style="font-size:12px;color:var(--fg3);font-style:italic">No sources yet.</div>'; return; }
+  let html = '';
+  state.allCitations.forEach(c => {
+    const loc = [c.chapter, c.concept, c.section?c.section.slice(0,50):'', c.page?'p.'+c.page:''].filter(Boolean).join(' · ');
+    const imgs = (c.image_files||[]).map(url=>({ url:`${API_BASE}${url}`, cap:[c.chapter,c.concept,c.page?`p.${c.page}`:''].filter(Boolean).join(' · '), refs:(c.figure_refs||[]).join(', ') }));
+    html += `<div class="cit-entry"><div class="cit-info-row"><div class="cit-info-title">${esc(c.title||'Campbell Biology')}</div><div class="cit-info-loc">${esc(loc)}</div>${c.score?`<div class="cit-info-score">Relevance: ${(c.score*100).toFixed(0)}%</div>`:''}</div>`;
+    if (imgs.length) imgs.forEach(img=>{ html+=`<div class="cit-img-col" onclick="openLightbox('${esc(img.url)}','${esc(img.cap)}')"><img src="${esc(img.url)}" alt="${esc(img.cap)}" onerror="this.closest('.cit-img-col').style.display='none'"/><div class="cit-img-label">${esc(img.refs||img.cap)}</div></div>`; });
+    else html += '<div class="cit-no-img">No extracted figure for this source.</div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function openCitFromBadge() { if (!state.citOpen) navAction('sources'); }
+
+/* ═══════════════════════════════════════════════════════
+   SCROLL HELPERS
+═══════════════════════════════════════════════════════ */
+function scrollBottom() { if (userScrolledUp) return; const f=document.getElementById('messages'); f.scrollTop=f.scrollHeight; }
+function scrollToBottom() { userScrolledUp=false; const f=document.getElementById('messages'); f.scrollTo({top:f.scrollHeight,behavior:'smooth'}); document.getElementById('scrollBtn').classList.remove('visible'); }
+
+/* ═══════════════════════════════════════════════════════
+   SEND
+═══════════════════════════════════════════════════════ */
+async function sendMessage() {
+  const field    = document.getElementById('inputField');
+  const question = field.value.trim();
+  if (!question || state.loading) return;
+  field.value=''; field.style.height='auto';
+  activateChat(); userScrolledUp=false;
+  appendUserMessage(question);
+  state.history.push({role:'user',content:question});
+  const typingId = showTyping(); setLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        question, session_id:state.sessionId,
+        history:state.history.slice(0,-1), socratic:state.socratic,
+        /* BACKEND NOTE: multi-source — currently sends only first namespace */
+        namespace:state.activeNamespaces[0]?.namespace||'campbell-biology-cohere',
+      }),
+    });
+    removeTyping(typingId);
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.detail||`HTTP ${res.status}`);}
+    const data=await res.json();
+    appendAIMessage(data);
+    state.history.push({role:'assistant',content:data.response});
+    loadSessions();
+  } catch(err) { removeTyping(typingId); appendErrorMessage(err.message); }
+  finally { setLoading(false); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MESSAGE RENDERING
+═══════════════════════════════════════════════════════ */
+const LONG_MSG_H = 220;
+
+function appendUserMessage(text) {
+  const feed=document.getElementById('messages'), now=formatTime(new Date());
+  const group=document.createElement('div'); group.className='msg-group user-group';
+  const msgEl=document.createElement('div'); msgEl.className='msg-user';
+  const bubble=document.createElement('div'); bubble.className='user-bubble';
+  bubble.innerHTML=`<div class="bubble-inner">${esc(text)}</div>`;
+  msgEl.appendChild(bubble); group.appendChild(msgEl);
+  const actions=document.createElement('div'); actions.className='msg-actions';
+  actions.innerHTML=`<span class="msg-time">${now}</span>
+    <button class="action-btn" title="Edit &amp; resend" onclick="editMessage('${esc(text).replace(/'/g,"\\'")}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+    <button class="action-btn" title="Copy" onclick="copyTextDirect('${esc(text).replace(/'/g,"\\'")}')"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>`;
+  group.appendChild(actions);
+  feed.appendChild(group); scrollBottom();
+  requestAnimationFrame(()=>{
+    const inner=bubble.querySelector('.bubble-inner');
+    if(inner&&inner.scrollHeight>LONG_MSG_H){ bubble.classList.add('is-long'); const btn=document.createElement('button'); btn.className='show-more-btn'; btn.textContent='Show more'; btn.onclick=()=>{bubble.classList.toggle('expanded');btn.textContent=bubble.classList.contains('expanded')?'Show less':'Show more';}; bubble.appendChild(btn); }
+    scrollBottom();
+  });
+}
+
+function appendAIMessage(data) {
+  const feed=document.getElementById('messages'), now=formatTime(new Date());
+  const group=document.createElement('div'); group.className='msg-group ai-group';
+  if(data.citations&&data.citations.length){ data.citations.forEach(c=>{if(!state.allCitations.find(x=>x.ref===c.ref&&x.chapter===c.chapter))state.allCitations.push(c);}); updateCitBadge(); buildCitPanel(); }
+  const cacheBadge=data.from_cache?`<div class="cache-badge"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> From cache</div>`:'';
+  const citBadge=(data.citations&&data.citations.length)?`<div class="cit-chat-badge" onclick="openCitFromBadge()" title="View sources"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg><span class="cit-chat-badge-text"><span class="cit-chat-badge-count">${data.citations.length}</span> source${data.citations.length>1?'s':''} cited</span><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--fg3);fill:none;stroke-width:2;stroke-linecap:round"><polyline points="9 18 15 12 9 6"/></svg></div>`:'';
+  const twId='tw-'+Date.now();
+  group.innerHTML=`<div class="msg-ai"><div class="ai-avatar"></div><div class="ai-body"><div class="ai-text" id="${twId}"></div>${citBadge}${cacheBadge}<div class="ai-meta"><span class="ai-time">${now}</span><button class="action-btn" title="Copy" onclick="copyAiResponse(this,'${twId}')"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button></div></div></div>`;
+  feed.appendChild(group); scrollBottom();
+  typewriterMd(group.querySelector('.ai-text'), data.response);
+}
+
+function appendErrorMessage(msg) {
+  const feed=document.getElementById('messages'); const group=document.createElement('div'); group.className='msg-group ai-group';
+  group.innerHTML=`<div class="msg-ai"><div class="ai-avatar"></div><div class="ai-body"><div class="ai-text" style="color:#c07878;font-family:var(--sans);font-size:14px">Backend unreachable: ${esc(msg)}<br><span style="color:var(--fg3);font-size:12px">Run <code style="color:var(--leaf2)">python api.py</code></span></div></div></div>`;
+  feed.appendChild(group); scrollBottom();
+}
+
+/* ═══════════════════════════════════════════════════════
+   MARKDOWN PARSER + TYPEWRITER
+═══════════════════════════════════════════════════════ */
+function parseMarkdown(raw) {
+  let t = raw;
+  t = t.replace(/```(\w*)\n([\s\S]*?)```/g, (_,lang,code)=>{
+    const esc2=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const lbl=lang?`<span class="code-lang">${lang}</span>`:'';
+    return `<pre${lang?` data-lang="${lang}"`:''}>${lbl}<button class="code-copy-btn" onclick="copyCodeBlock(this)">Copy</button><code class="language${lang?` language-${lang}`:' language-none'}">${esc2}</code></pre>`;
+  });
+  t = t.replace(/`([^`\n]+)`/g,(_,c)=>`<code>${c.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>`);
+  t = t.replace(/\$\$([\s\S]+?)\$\$/g,(_,m)=>`<div class="katex-block" data-math="${m.replace(/"/g,'&quot;')}"></div>`);
+  t = t.replace(/\$([^\$\n]+)\$/g,(_,m)=>`<span class="katex-inline" data-math="${m.replace(/"/g,'&quot;')}"></span>`);
+  t = t.replace(/^(-{3,}|\*{3,}|_{3,})\s*$/gm,'<hr>');
+  t = t.replace(/^#{6}\s+(.+)$/gm,'<h6>$1</h6>');
+  t = t.replace(/^#{5}\s+(.+)$/gm,'<h5>$1</h5>');
+  t = t.replace(/^#{4}\s+(.+)$/gm,'<h4>$1</h4>');
+  t = t.replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>');
+  t = t.replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>');
+  t = t.replace(/^#\s+(.+)$/gm,  '<h1>$1</h1>');
+  t = t.replace(/^>\s+(.+)$/gm,'<blockquote><p>$1</p></blockquote>');
+  t = t.replace(/((?:^\|.+\|[ \t]*\n)+)/gm, block=>{
+    const lines=block.trim().split('\n'); if(lines.length<2)return block;
+    const isSep=l=>/^\|[-: |]+\|$/.test(l.trim());
+    let html='<table>',inBody=false;
+    lines.forEach((line,i)=>{ if(isSep(line)){inBody=true;return;} const cells=line.trim().replace(/^\||\|$/g,'').split('|'); if(i===0)html+='<thead><tr>'+cells.map(c=>`<th>${c.trim()}</th>`).join('')+'</tr></thead>'; else if(inBody){if(!html.includes('<tbody>'))html+='<tbody>';html+='<tr>'+cells.map(c=>`<td>${c.trim()}</td>`).join('')+'</tr>';}});
+    if(html.includes('<tbody>'))html+='</tbody>'; return html+'</table>';
+  });
+  t = t.replace(/((?:^[-*+]\s+.+\n?)+)/gm,b=>'<ul>'+b.trim().split('\n').map(l=>`<li>${l.replace(/^[-*+]\s+/,'')}</li>`).join('')+'</ul>');
+  t = t.replace(/((?:^\d+\.\s+.+\n?)+)/gm,b=>'<ol>'+b.trim().split('\n').map(l=>`<li>${l.replace(/^\d+\.\s+/,'')}</li>`).join('')+'</ol>');
+  t = t.replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>');
+  t = t.replace(/__([^_]+)__/g,'<strong>$1</strong>');
+  t = t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t = t.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+  t = t.replace(/_([^_\n]+)_/g,'<em>$1</em>');
+  const blocks=t.split(/\n{2,}/);
+  t=blocks.map(b=>{b=b.trim();if(!b)return'';if(/^<(h[1-6]|ul|ol|li|pre|table|blockquote|hr|div|p)/.test(b))return b;return`<p>${b.replace(/\n/g,'<br>')}</p>`;}).join('\n');
+  return t;
+}
+
+function renderMath(el) {
+  if (!window.katex) return;
+  el.querySelectorAll('.katex-block').forEach(n=>{try{katex.render(n.dataset.math,n,{displayMode:true,throwOnError:false});}catch(e){}});
+  el.querySelectorAll('.katex-inline').forEach(n=>{try{katex.render(n.dataset.math,n,{displayMode:false,throwOnError:false});}catch(e){}});
+}
+
+function typewriterMd(container, text, speed=11) {
+  let i=0, raw='';
+  const display=document.createElement('div'); display.className='md-body'; display.style.whiteSpace='pre-wrap';
+  container.appendChild(display); container.classList.add('typewriter-cursor');
+  function tick() {
+    if(i<text.length){ raw+=text[i++]; display.textContent=raw; scrollBottom(); setTimeout(tick,speed); }
+    else { container.classList.remove('typewriter-cursor'); display.style.whiteSpace=''; display.innerHTML=parseMarkdown(raw); if(window.Prism)Prism.highlightAllUnder(display); renderMath(display); scrollBottom(); }
+  }
+  tick();
+}
+
+function copyCodeBlock(btn) {
+  const code=btn.closest('pre')?.querySelector('code'); if(!code)return;
+  navigator.clipboard.writeText(code.textContent).then(()=>{ btn.textContent='Copied!'; btn.classList.add('copied'); setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},1800); });
+}
+
+/* ═══════════════════════════════════════════════════════
+   THINKING INDICATOR
+═══════════════════════════════════════════════════════ */
+const THINK_LABELS=['thinking','thinking harder','almost there'], THINK_FINAL='yes, got it!';
+let thinkTimer=null, thinkStage=0, thinkLabelEl=null;
+
+function showTyping() {
+  const feed=document.getElementById('messages'), id='typing-'+Date.now();
+  const group=document.createElement('div'); group.id=id; group.className='msg-group ai-group';
+  group.innerHTML=`<div class="msg-ai"><div class="ai-avatar"></div><div class="ai-body"><div class="ai-text"><div class="typing-row"><div class="thinking-panel"><div class="typing-dots"><span></span><span></span><span></span></div><span class="thinking-label" id="think-label"></span></div><div class="response-boundary" id="resp-boundary"></div></div></div></div></div>`;
+  feed.appendChild(group); scrollBottom();
+  thinkStage=0; thinkLabelEl=group.querySelector('#think-label');
+  thinkTimer=setTimeout(advanceThinkLabel,1000);
+  return id;
+}
+function advanceThinkLabel() {
+  if(!thinkLabelEl)return;
+  if(thinkStage<THINK_LABELS.length){ thinkLabelEl.textContent=THINK_LABELS[thinkStage]; thinkLabelEl.style.animation='none'; void thinkLabelEl.offsetWidth; thinkLabelEl.style.animation=''; thinkStage++; thinkTimer=setTimeout(advanceThinkLabel,3500); }
+}
+function removeTyping(id) {
+  clearTimeout(thinkTimer);
+  if(thinkLabelEl){ const b=document.getElementById('resp-boundary'); if(b)b.classList.add('done'); thinkLabelEl.textContent=THINK_FINAL; thinkLabelEl.style.animation='none'; void thinkLabelEl.offsetWidth; thinkLabelEl.style.animation=''; }
+  setTimeout(()=>{document.getElementById(id)?.remove();thinkLabelEl=null;},2200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   INPUT
+═══════════════════════════════════════════════════════ */
+function onInputFocus()  { document.getElementById('inputFloat').classList.add('focused'); }
+function onInputBlur()   { document.getElementById('inputFloat').classList.remove('focused'); }
+function insertSuggestion(text) { const inp=document.getElementById('inputField'); inp.value=text; autoResize(inp); inp.focus(); }
+
+/* ═══════════════════════════════════════════════════════
+   COPY ACTIONS
+═══════════════════════════════════════════════════════ */
+function editMessage(text) { const d=text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'"); const inp=document.getElementById('inputField'); inp.value=d; inp.focus(); autoResize(inp); }
+function copyTextDirect(text) { const d=text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'"); navigator.clipboard.writeText(d).then(()=>showToast()); }
+function copyAiResponse(btn,twId) { const el=document.getElementById(twId); if(!el)return; navigator.clipboard.writeText(el.textContent).then(()=>showToast()); }
+function showToast() { const t=document.getElementById('copyToast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
+
+/* ═══════════════════════════════════════════════════════
+   LIGHTBOX
+═══════════════════════════════════════════════════════ */
+function openLightbox(src,cap){document.getElementById('lightboxImg').src=src;document.getElementById('lightboxCaption').textContent=cap;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+
+/* ═══════════════════════════════════════════════════════
+   SESSIONS — grouped by date
+═══════════════════════════════════════════════════════ */
+async function loadSessions(){
+  try{ const res=await fetch(`${API_BASE}/api/sessions`); const data=await res.json(); renderSessions(data.sessions||[]); }
+  catch{ document.getElementById('recentList').innerHTML='<div style="padding:6px 16px;font-size:11px;color:var(--fg3)">Backend offline</div>'; }
+}
+function renderSessions(sessions){
+  const list=document.getElementById('recentList');
+  if(!sessions.length){list.innerHTML='<div style="padding:6px 16px;font-size:11px;color:var(--fg3)">No sessions yet</div>';return;}
+  const now=new Date(),todayStr=now.toDateString();
+  const ystDay=new Date(now);ystDay.setDate(now.getDate()-1);const ystStr=ystDay.toDateString();
+  const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-7);
+  const groups={'Today':[],'Yesterday':[],'This Week':[],'Earlier':[]};
+  sessions.forEach(s=>{const d=new Date(s.timestamp||0);const ds=d.toDateString();if(ds===todayStr)groups['Today'].push(s);else if(ds===ystStr)groups['Yesterday'].push(s);else if(d>=weekAgo)groups['This Week'].push(s);else groups['Earlier'].push(s);});
+  let html='';
+  Object.entries(groups).forEach(([label,items])=>{
+    if(!items.length)return;
+    html+=`<div class="sb-date-group">${label}</div>`;
+    html+=items.slice(0,6).map(s=>`<div class="sb-row ${s.id===state.sessionId?'active':''}"><div class="sb-row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><span class="sb-row-label" title="${esc(s.summary)}">${esc(s.summary)}</span></div>`).join('');
+  });
+  list.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DOCUMENTS MODAL
+   BACKEND NOTE: /api/documents returns AVAILABLE_DOCUMENTS.
+   Multi-source: toggleDocSource should add/remove from
+   state.activeNamespaces[] when backend supports arrays.
+═══════════════════════════════════════════════════════ */
+async function loadDocuments(){
+  try{const res=await fetch(`${API_BASE}/api/documents`);const data=await res.json();state.documents=data.documents||[];}
+  catch{state.documents=[{id:'campbell-biology-12e',title:'Campbell Biology',subtitle:'12th Edition',description:'Chapters 1–56',namespace_cohere:'campbell-biology-cohere',subject:'bio'}];}
+}
+function openDocModal(){
+  const list=document.getElementById('docList');
+  if(!state.documents.length){list.innerHTML=`<div class="empty-state">No documents indexed yet.<br><span style="font-size:10px;color:var(--fg3)">Run embed_campbell.py</span></div>`;}
+  else{list.innerHTML=state.documents.map(doc=>{const isActive=state.activeNamespaces.find(n=>n.id===doc.id);return`<div class="doc-card ${isActive?'active-doc':''}" onclick="toggleDocSource('${doc.id}')"><div class="doc-cover"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div><div style="flex:1"><div class="doc-name">${esc(doc.title)}</div><div class="doc-edition">${esc(doc.subtitle||'')}</div><div class="doc-desc">${esc(doc.description||'')}</div></div><div class="doc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div></div>`;}).join('');}
+  document.getElementById('docModal').classList.add('open');
+}
+function closeDocModal(){document.getElementById('docModal').classList.remove('open');}
+function handleModalClick(e){if(e.target===document.getElementById('docModal'))closeDocModal();}
+function toggleDocSource(docId){
+  const doc=state.documents.find(d=>d.id===docId);if(!doc)return;
+  state.activeNamespaces=[{id:doc.id,title:doc.title,namespace:doc.namespace_cohere||doc.namespace_llama||'campbell-biology-cohere',subject:doc.subject||'bio'}];
+  document.getElementById('activeDocBadge').textContent=doc.title.split(' ')[0];
+  document.getElementById('topTitle').textContent=doc.title;
+  renderSourceChips();
+  document.querySelectorAll('.doc-card').forEach(el=>el.classList.remove('active-doc'));
+  event.currentTarget.classList.add('active-doc');
+  setTimeout(closeDocModal,360);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SOCRATIC / ARCHIVE / UTILITIES
+═══════════════════════════════════════════════════════ */
+function toggleSocratic(){state.socratic=!state.socratic;const tog=document.getElementById('socToggle'),desc=document.getElementById('socDesc');tog.classList.toggle('on',state.socratic);tog.classList.toggle('off',!state.socratic);desc.textContent=state.socratic?'Guided questioning on':'Direct answers on';}
+async function archiveSession(){if(!state.history.length)return;try{await fetch(`${API_BASE}/api/archive`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:state.sessionId,history:state.history})});}catch{}}
+window.addEventListener('beforeunload',archiveSession);
+
+function formatTime(d){return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px';}
+function setLoading(v){state.loading=v;document.getElementById('sendBtn').disabled=v;}
+/* ═══════════════════════════════════════════════════════
+   SESSION D — FLASHCARD ENGINE
+═══════════════════════════════════════════════════════ */
+
+/* ── localStorage helpers ──────────────────────────────
+   BACKEND NOTE: replace with API calls when server-side
+   persistence is built at /api/flashcards */
+function saveDeck() {
+  try { localStorage.setItem('orelia_deck_' + state.sessionId, JSON.stringify(state.deck)); } catch(e) {}
+}
+function loadDeck() {
+  try {
+    const raw = localStorage.getItem('orelia_deck_' + state.sessionId);
+    if (raw) state.deck = JSON.parse(raw);
+  } catch(e) {}
+}
+function clearDeck() {
+  if (!confirm('Clear all cards in this deck?')) return;
+  state.deck = []; state.deckIdx = 0; state.deckFlipped = false;
+  saveDeck(); renderDeck();
+}
+
+/* ── Render the deck UI ── */
+function renderDeck() {
+  loadDeck();
+  const empty    = document.getElementById('fcEmpty');
+  const viewer   = document.getElementById('fcViewer');
+  const complete = document.getElementById('fcComplete');
+  const badge    = document.getElementById('flashcardBadge');
+
+  // Update sidebar badge
+  if (state.deck.length > 0) {
+    badge.textContent = state.deck.length;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+
+  if (!state.deck.length) {
+    empty.style.display    = 'flex';
+    viewer.style.display   = 'none';
+    complete.style.display = 'none';
+    return;
+  }
+
+  // Check if all cards have been rated
+  const allDone = state.deck.every(c => c.status !== 'new');
+  if (allDone && state.deckIdx >= state.deck.length) {
+    showDeckComplete(); return;
+  }
+
+  empty.style.display    = 'none';
+  complete.style.display = 'none';
+  viewer.style.display   = 'flex';
+
+  renderCard();
+}
+
+function renderCard() {
+  if (!state.deck.length) return;
+  const card = state.deck[state.deckIdx];
+  if (!card) return;
+
+  // Card content
+  document.getElementById('fcCardQ').textContent = card.q;
+  // Answer uses markdown rendering
+  const ansEl = document.getElementById('fcCardA');
+  ansEl.innerHTML = parseMarkdown(card.a);
+  if (window.Prism) Prism.highlightAllUnder(ansEl);
+  renderMath(ansEl);
+
+  // Reset flip state
+  state.deckFlipped = false;
+  document.getElementById('fcCard').classList.remove('flipped');
+  document.getElementById('fcRating').style.display = 'none';
+  document.getElementById('fcFlipHint') && (document.getElementById('fcFlipHint').style.display = '');
+
+  // Progress
+  const done  = state.deck.filter(c => c.status !== 'new').length;
+  const pct   = state.deck.length ? (done / state.deck.length * 100) : 0;
+  document.getElementById('fcProgressFill').style.width  = pct + '%';
+  document.getElementById('fcProgressLabel').textContent = done + ' / ' + state.deck.length;
+
+  // Nav label
+  document.getElementById('fcNavLabel').textContent =
+    'Card ' + (state.deckIdx + 1) + ' of ' + state.deck.length;
+
+  // Nav button states
+  document.getElementById('fcPrevBtn').disabled = state.deckIdx === 0;
+  document.getElementById('fcNextBtn').disabled = state.deckIdx >= state.deck.length - 1;
+
+  // Update deck chat context
+  document.getElementById('fcChatContext').textContent =
+    `Card ${state.deckIdx+1}: "${card.q.slice(0,50)}${card.q.length>50?'…':''}"`;
+}
+
+function flipCard() {
+  state.deckFlipped = !state.deckFlipped;
+  document.getElementById('fcCard').classList.toggle('flipped', state.deckFlipped);
+  document.getElementById('fcRating').style.display = state.deckFlipped ? 'flex' : 'none';
+}
+
+function prevCard() {
+  if (state.deckIdx > 0) { state.deckIdx--; renderCard(); }
+}
+function nextCard() {
+  if (state.deckIdx < state.deck.length - 1) { state.deckIdx++; renderCard(); }
+}
+
+function rateCard(rating) {
+  /* rating: 'again' | 'almost' | 'got' */
+  state.deck[state.deckIdx].status = rating;
+  saveDeck();
+
+  // Move to next unrated card, or wrap to first 'again' card
+  const nextNew   = state.deck.findIndex((c,i) => i > state.deckIdx && c.status === 'new');
+  const firstAgain= state.deck.findIndex(c => c.status === 'again');
+
+  if (nextNew !== -1) {
+    state.deckIdx = nextNew;
+    renderCard();
+  } else if (firstAgain !== -1) {
+    state.deckIdx = firstAgain;
+    renderCard();
+  } else {
+    // All cards have been rated at least once
+    state.deckIdx = state.deck.length; // signals complete
+    showDeckComplete();
+  }
+}
+
+function showDeckComplete() {
+  document.getElementById('fcViewer').style.display   = 'none';
+  document.getElementById('fcEmpty').style.display    = 'none';
+  document.getElementById('fcComplete').style.display = 'flex';
+  const got   = state.deck.filter(c => c.status === 'got').length;
+  const almost= state.deck.filter(c => c.status === 'almost').length;
+  const again = state.deck.filter(c => c.status === 'again').length;
+  document.getElementById('fcCompleteStats').innerHTML =
+    `Got it: <strong style="color:var(--accent-teal)">${got}</strong> &nbsp;·&nbsp; ` +
+    `Almost: <strong style="color:var(--accent-amber)">${almost}</strong> &nbsp;·&nbsp; ` +
+    `Review again: <strong style="color:var(--accent-rose)">${again}</strong>`;
+}
+
+function restartDeck() {
+  state.deck.forEach(c => c.status = 'new');
+  state.deckIdx = 0; state.deckFlipped = false;
+  saveDeck(); renderDeck();
+}
+
+function reviewWeak() {
+  /* Keep only 'again' and 'almost' cards, mark as new */
+  state.deck = state.deck
+    .filter(c => c.status === 'again' || c.status === 'almost')
+    .map(c => ({ ...c, status: 'new' }));
+  state.deckIdx = 0; state.deckFlipped = false;
+  saveDeck(); renderDeck();
+}
+
+/* ── Generate flashcards from session ──────────────────
+   BACKEND NOTE: calls /api/chat with a card-generation prompt.
+   The AI returns JSON array of {q, a} objects.
+   Future: dedicate /api/generate-flashcards endpoint. */
+async function generateFlashcards() {
+  const btn = document.getElementById('fcGenerateBtn');
+  if (!state.history.length) {
+    alert('Start a study session first — ask Orelia some questions, then generate cards from that session.');
+    return;
+  }
+  btn.textContent = 'Generating…';
+  btn.disabled    = true;
+
+  // Build transcript for LLM
+  const transcript = state.history
+    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
+    .join('\n');
+
+  const generationPrompt = `You are a flashcard generator for a biology student.
+Based on the following study session transcript, create 5-8 high-quality flashcards.
+Each card should test a specific concept, fact, or mechanism discussed.
+
+Rules:
+- Questions should be precise and testable
+- Answers should be concise but complete (2-4 sentences max)
+- Use simple markdown in answers (bold key terms)
+- Focus on what the student struggled with or asked about most
+
+Return ONLY a valid JSON array, no other text:
+[{"q": "question text", "a": "answer text"}, ...]
+
+Transcript:
+${transcript.slice(0, 3000)}`;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question   : generationPrompt,
+        session_id : state.sessionId,
+        history    : [],
+        socratic   : false,
+        namespace  : state.activeNamespaces[0]?.namespace || 'campbell-biology-cohere',
+      }),
+    });
+    if (!res.ok) throw new Error('Generation failed');
+    const data = await res.json();
+
+    // Parse the JSON array from the response
+    let raw = data.response.trim();
+    // Strip markdown code fences if present
+    raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/,'').trim();
+    const cards = JSON.parse(raw);
+
+    if (!Array.isArray(cards) || !cards.length) throw new Error('No cards returned');
+
+    // Add to deck with unique IDs and 'new' status
+    const newCards = cards.map((c, i) => ({
+      id    : Date.now() + i,
+      q     : c.q || c.question || 'Question',
+      a     : c.a || c.answer   || 'Answer',
+      status: 'new',
+    }));
+
+    state.deck   = [...state.deck, ...newCards];
+    state.deckIdx = 0;
+    saveDeck();
+    renderDeck();
+
+    // Notify in the deck chat
+    appendFcMessage('ai', `Generated ${newCards.length} new flashcards from your session. Flip each card when you're ready to see the answer, then rate how well you knew it.`);
+
+  } catch(e) {
+    appendFcMessage('ai', `Could not generate flashcards: ${e.message}. Make sure the backend is running and you have an active session with some questions asked.`);
+  } finally {
+    btn.textContent = 'Generate from session';
+    btn.disabled    = false;
+  }
+}
+
+/* ── Flashcard deck chat pane ──────────────────────────
+   Separate from the main chat — context is card-aware.
+   BACKEND NOTE: uses /api/chat with a card-specific system
+   context prepended. When /api/flashcards is built,
+   this can pass card_id for richer context. */
+async function sendFcMessage() {
+  const field = document.getElementById('fcInputField');
+  const text  = field.value.trim();
+  if (!text || document.getElementById('fcSendBtn').disabled) return;
+  field.value = ''; autoResize(field);
+
+  appendFcMessage('user', text);
+  state.fcHistory.push({ role: 'user', content: text });
+  document.getElementById('fcSendBtn').disabled = true;
+
+  // Show typing dots
+  const typingId = 'fc-typing-' + Date.now();
+  appendFcTyping(typingId);
+
+  // Build card context for LLM
+  const card    = state.deck[state.deckIdx];
+  const context = card
+    ? `[Student is reviewing flashcard ${state.deckIdx+1}/${state.deck.length}: Q: "${card.q}" | A: "${card.a}"]`
+    : '[Student is in the flashcard review session]';
+
+  const contextualHistory = [
+    { role: 'user', content: context + '\n\nStudent question: ' + text }
+  ];
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question  : context + '\n\n' + text,
+        session_id: state.sessionId,
+        history   : state.fcHistory.slice(-6),  // last 3 turns
+        socratic  : false,
+        namespace : state.activeNamespaces[0]?.namespace || 'campbell-biology-cohere',
+      }),
+    });
+    removeFcTyping(typingId);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    appendFcMessage('ai', data.response);
+    state.fcHistory.push({ role: 'assistant', content: data.response });
+  } catch(e) {
+    removeFcTyping(typingId);
+    appendFcMessage('ai', 'Could not reach Orelia: ' + e.message);
+  } finally {
+    document.getElementById('fcSendBtn').disabled = false;
+  }
+}
+
+function appendFcMessage(role, text) {
+  const feed = document.getElementById('fcMessages');
+  const wrap = document.createElement('div');
+  wrap.className = role === 'user' ? 'fc-msg-user' : 'fc-msg-ai';
+  const bubble = document.createElement('div');
+  bubble.className = 'fc-bubble';
+  if (role === 'ai') {
+    bubble.classList.add('md-body');
+    bubble.innerHTML = parseMarkdown(text);
+    if (window.Prism) Prism.highlightAllUnder(bubble);
+    renderMath(bubble);
+  } else {
+    bubble.textContent = text;
+  }
+  wrap.appendChild(bubble);
+  feed.appendChild(wrap);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function appendFcTyping(id) {
+  const feed = document.getElementById('fcMessages');
+  const el   = document.createElement('div');
+  el.id = id; el.className = 'fc-msg-ai';
+  el.innerHTML = '<div class="fc-bubble"><div class="fc-typing"><span></span><span></span><span></span></div></div>';
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+}
+function removeFcTyping(id) { document.getElementById(id)?.remove(); }
+
+function handleFcKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFcMessage(); }
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+/* ═══════════════════════════════════════════════════════
+   SESSION E — SCHOLAR DASHBOARD ENGINE
+═══════════════════════════════════════════════════════ */
+
+/* ── Tab switching ── */
+function switchDashTab(tab) {
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('dtab-'+tab).classList.add('active');
+  document.getElementById('dpanel-'+tab).classList.add('active');
+  // Build dynamic content for the activated tab
+  if (tab === 'calendar') buildCalendar();
+  if (tab === 'progress') { buildWheels(); buildBarChart(); renderDashSessions(); }
+}
+
+/* ── Load all dashboard data ─────────────────────────
+   BACKEND NOTE: pulls from:
+   - localStorage (session counts, streak, deck activity)
+   - /api/sessions (past session list, timestamps, summaries)
+/* ═══════════════════════════════════════════════════════
+   Future: /api/progress endpoint for richer analytics */
+function loadDashboardData() {
+  updateDashGreeting();
+  loadDashStats();
+  // Ensure overview tab is active
+  switchDashTab('overview');
+}
+
+function updateDashGreeting() {
+  const h = new Date().getHours();
+  let greeting = 'Good morning';
+  if (h >= 12 && h < 17) greeting = 'Good afternoon';
+  if (h >= 17) greeting = 'Good evening';
+  document.getElementById('dashGreeting').querySelector('.dash-greeting-title').textContent = greeting + ', Scholar.';
+
+  const subs = [
+    'Ready to make today count?',
+    'Your next session awaits.',
+    'Consistency builds mastery.',
+    'Small steps every day.',
+    'Knowledge compounds — keep going.',
+  ];
+  document.getElementById('dashGreetingSub').textContent = subs[Math.floor(Math.random()*subs.length)];
+}
+
+function loadDashStats() {
+  // Streak — count days localStorage has entries
+  // BACKEND NOTE: replace with server-side session date tracking
+  const today = new Date().toDateString();
+  let streak  = parseInt(localStorage.getItem('orelia_streak')||'1');
+  const lastDay = localStorage.getItem('orelia_last_day');
+  if (lastDay !== today) {
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    if (lastDay === yesterday.toDateString()) streak++;
+    else streak = 1;
+    localStorage.setItem('orelia_streak', streak);
+    localStorage.setItem('orelia_last_day', today);
+  }
+  document.getElementById('streakCount').textContent = streak;
+
+  // Deck cards reviewed
+  let totalCards = 0;
+  for (let i=0; i<localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('orelia_deck_')) {
+      try { const d = JSON.parse(localStorage.getItem(k)); totalCards += d.filter(c=>c.status!=='new').length; } catch(e){}
+    }
+  }
+  document.getElementById('cardsCount').textContent = totalCards;
+
+  // Hours — approximate from session count * avg 15min
+  const sessCount = parseInt(localStorage.getItem('orelia_session_count')||'0');
+  localStorage.setItem('orelia_session_count', sessCount + (state.history.length ? 1 : 0));
+  const hrs = ((sessCount * 15) / 60).toFixed(1);
+  document.getElementById('hoursCount').textContent = hrs + 'h';
+  document.getElementById('sessionsCount').textContent = sessCount;
+}
+
+/* ── Calendar heatmap (16 weeks × 7 days) ── */
+function buildCalendar() {
+  const container = document.getElementById('calHeatmap');
+  if (!container || container.children.length) return; // already built
+
+  const today   = new Date();
+  const cells   = 16 * 7; // 16 weeks
+  const start   = new Date(today);
+  start.setDate(today.getDate() - cells + 1);
+
+  // Build fake activity data from localStorage
+  // BACKEND NOTE: replace with real session timestamps from /api/sessions
+  const activityMap = {};
+  for (let i=0; i<localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('orelia_deck_')) {
+      // Treat deck existence as activity on today
+      const d = new Date(); activityMap[d.toDateString()] = 3;
+    }
+  }
+
+  // Render columns (weeks)
+  for (let w=0; w<16; w++) {
+    const weekDiv = document.createElement('div');
+    weekDiv.className = 'cal-week';
+    for (let d=0; d<7; d++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + w*7 + d);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      const level = activityMap[date.toDateString()] || (Math.random() < 0.3 ? Math.ceil(Math.random()*3) : 0);
+      if (level > 0) cell.classList.add('l'+Math.min(level,5));
+      cell.title = date.toLocaleDateString([], {month:'short', day:'numeric'});
+      if (date > today) cell.style.opacity = '0.25';
+      weekDiv.appendChild(cell);
+    }
+    container.appendChild(weekDiv);
+  }
+}
+
+/* ── Progress wheels ── */
+const WHEEL_TOPICS = [
+  { name:'Osmosis',       pct:82, color:'var(--accent-teal)'   },
+  { name:'Cell Structure',pct:74, color:'var(--accent-teal)'   },
+  { name:'DNA Replication',pct:55,color:'var(--accent-amber)'  },
+  { name:'Mitosis',       pct:48, color:'var(--accent-amber)'  },
+  { name:'Meiosis',       pct:30, color:'var(--accent-rose)'   },
+  { name:'Evolution',     pct:15, color:'var(--accent-rose)'   },
+];
+function buildWheels() {
+  const container = document.getElementById('dashWheels');
+  if (!container || container.children.length) return;
+  const R = 28, CIRC = 2 * Math.PI * R;
+  WHEEL_TOPICS.forEach(t => {
+    const offset = CIRC * (1 - t.pct/100);
+    const item = document.createElement('div'); item.className = 'dash-wheel-item';
+    item.innerHTML = `
+      <svg class="dash-wheel-svg" width="68" height="68" viewBox="0 0 68 68">
+        <circle class="dash-wheel-bg" cx="34" cy="34" r="${R}"/>
+        <circle class="dash-wheel-fg" cx="34" cy="34" r="${R}"
+          stroke="${t.color}"
+          stroke-dasharray="${CIRC}"
+          stroke-dashoffset="${CIRC}"
+          id="whl-${t.name.replace(/\s/g,'-')}"/>
+        <text x="34" y="38" text-anchor="middle" fill="var(--fg)"
+          font-size="11" font-family="var(--sans)" font-weight="600"
+          transform="rotate(90 34 34)">${t.pct}%</text>
+      </svg>
+      <div class="dash-wheel-label">${t.name}</div>`;
+    container.appendChild(item);
+    // Animate after a tick so transition fires
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const el = document.getElementById('whl-'+t.name.replace(/\s/g,'-'));
+      if (el) el.style.strokeDashoffset = offset;
+    }));
+  });
+}
+
+/* ── Bar chart (7-day active hours) ── */
+const BAR_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const BAR_DATA = [0.5, 1.2, 0.8, 1.5, 0.3, 2.0, 0.6]; // placeholder hours
+function buildBarChart() {
+  const container = document.getElementById('dashBarChart');
+  if (!container || container.children.length) return;
+  const max = Math.max(...BAR_DATA, 0.1);
+  BAR_DAYS.forEach((day,i) => {
+    const col = document.createElement('div'); col.className = 'dash-bar-col';
+    const heightPct = (BAR_DATA[i] / max * 100);
+    col.innerHTML = `<div class="dash-bar" id="bar-${i}" style="height:0%;background:${BAR_DATA[i]>1?'var(--moss)':'var(--moss3)'}"></div><div class="dash-bar-day">${day}</div>`;
+    container.appendChild(col);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const b = document.getElementById('bar-'+i);
+      if (b) b.style.height = heightPct + '%';
+    }));
+  });
+}
+
+/* ── Recent sessions for progress tab ── */
+async function renderDashSessions() {
+  const container = document.getElementById('dashSessionsList');
+  try {
+    const res  = await fetch(`${API_BASE}/api/sessions`);
+    const data = await res.json();
+    const sessions = (data.sessions || []).slice(0,8);
+    if (!sessions.length) return;
+    container.innerHTML = sessions.map(s => `
+      <div class="dash-session-row">
+        <div class="dash-session-dot"></div>
+        <div class="dash-session-title">${esc(s.summary||'Study session')}</div>
+        <div class="dash-session-date">${s.timestamp ? new Date(s.timestamp).toLocaleDateString([],{month:'short',day:'numeric'}) : ''}</div>
+      </div>`).join('');
+  } catch(e) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--fg3);font-style:italic">Backend offline — sessions unavailable.</div>';
+  }
+}
+
+/* ── Study mode launcher ─────────────────────────────
+   BACKEND NOTE: each mode calls /api/chat with a special
+   system prompt injected as first user turn.
+   Future: dedicated /api/mode endpoint per mode type. */
+const MODE_PROMPTS = {
+  quickcheck : `You are running a Quick Check for a biology student. Generate 5 short quiz questions (mix of multiple choice and short answer) based on topics the student has studied. Ask them one at a time. After each answer, give brief feedback and move to the next. Keep it energetic and encouraging. Start immediately with Question 1.`,
+  topicquiz  : `You are running a Topic Quiz. Ask the student which chapter or topic they want to be quizzed on, then generate 10 questions of varying difficulty. One at a time. Provide feedback after each answer.`,
+  fullexam   : `You are generating a full biology exam. Ask the student for their exam date and which chapters are covered. Then generate a complete structured exam with sections (multiple choice, short answer, essay) and mark allocations. Present it section by section.`,
+  socratic   : `You are in Socratic mode. The student will ask about a topic. Do NOT give direct answers. Instead, guide them with probing questions to help them reason to the answer themselves. Only confirm when they arrive at the correct understanding.`,
+  planner    : `You are an exam prep planner. Ask the student for their exam date and which topics remain uncovered. Then generate a day-by-day study schedule, weighted by difficulty and the student's past performance. Present it as a structured plan.`,
+};
+const MODE_LABELS = {
+  quickcheck:'Quick Check', topicquiz:'Topic Quiz', fullexam:'Full Exam',
+  socratic:'Socratic Deep-Dive', planner:'Exam Prep Planner',
+};
+
+let modeHistory = [];
+let activeModeKey = null;
+
+async function launchMode(modeKey) {
+  activeModeKey = modeKey;
+  modeHistory   = [];
+  const active  = document.getElementById('dashModeActive');
+  const msgs    = document.getElementById('dashModeMessages');
+  const title   = document.getElementById('dashModeTitle');
+
+  title.textContent = MODE_LABELS[modeKey] || modeKey;
+  msgs.innerHTML = '';
+  active.style.display = 'flex';
+  // Scroll modes panel down to show active area
+  document.getElementById('dpanel-modes').scrollTo({ top: 9999, behavior: 'smooth' });
+
+  // Send opening prompt as first turn
+  const typingId = 'mode-typing-' + Date.now();
+  appendModeMsg('typing', '', typingId);
+  document.getElementById('dashModeSendBtn').disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        question  : MODE_PROMPTS[modeKey],
+        session_id: state.sessionId,
+        history   : [],
+        socratic  : false,
+        namespace : state.activeNamespaces[0]?.namespace || 'campbell-biology-cohere',
+      }),
+    });
+    removeModeTyping(typingId);
+    const data = await res.json();
+    appendModeMsg('ai', data.response);
+    modeHistory.push({ role:'user', content: MODE_PROMPTS[modeKey] });
+    modeHistory.push({ role:'assistant', content: data.response });
+  } catch(e) {
+    removeModeTyping(typingId);
+    appendModeMsg('ai', 'Could not start mode: ' + e.message);
+  } finally {
+    document.getElementById('dashModeSendBtn').disabled = false;
+  }
+}
+
+async function sendModeMessage() {
+  const field = document.getElementById('dashModeInput');
+  const text  = field.value.trim();
+  if (!text || document.getElementById('dashModeSendBtn').disabled) return;
+  field.value = ''; autoResize(field);
+
+  appendModeMsg('user', text);
+  modeHistory.push({ role:'user', content: text });
+  document.getElementById('dashModeSendBtn').disabled = true;
+
+  const typingId = 'mode-t-' + Date.now();
+  appendModeMsg('typing', '', typingId);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        question  : text,
+        session_id: state.sessionId,
+        history   : modeHistory.slice(-8),
+        socratic  : activeModeKey === 'socratic',
+        namespace : state.activeNamespaces[0]?.namespace || 'campbell-biology-cohere',
+      }),
+    });
+    removeModeTyping(typingId);
+    const data = await res.json();
+    appendModeMsg('ai', data.response);
+    modeHistory.push({ role:'assistant', content: data.response });
+  } catch(e) {
+    removeModeTyping(typingId);
+    appendModeMsg('ai', 'Error: ' + e.message);
+  } finally {
+    document.getElementById('dashModeSendBtn').disabled = false;
+  }
+}
+
+function appendModeMsg(role, text, id) {
+  const container = document.getElementById('dashModeMessages');
+  const wrap = document.createElement('div');
+  if (id) wrap.id = id;
+
+  if (role === 'typing') {
+    wrap.innerHTML = '<div class="fc-typing"><span></span><span></span><span></span></div>';
+  } else if (role === 'user') {
+    wrap.className = 'fc-msg-user';
+    const b = document.createElement('div'); b.className='fc-bubble'; b.textContent=text;
+    wrap.appendChild(b);
+  } else {
+    wrap.className = 'fc-msg-ai';
+    const b = document.createElement('div'); b.className='fc-bubble md-body';
+    b.innerHTML = parseMarkdown(text);
+    if (window.Prism) Prism.highlightAllUnder(b);
+    renderMath(b);
+    wrap.appendChild(b);
+  }
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+}
+function removeModeTyping(id) { document.getElementById(id)?.remove(); }
+function handleModeKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendModeMessage();} }
+function closeModeSession() {
+  document.getElementById('dashModeActive').style.display = 'none';
+  activeModeKey = null; modeHistory = [];
+}
+
+/* ── Floating Orelia tray ── */
+let orelihHistory = [];
+
+function toggleOrelihTray() {
+  const tray = document.getElementById('orelihTray');
+  tray.classList.toggle('open');
+}
+
+async function sendOrelihMsg() {
+  const field = document.getElementById('orelihInput');
+  const text  = field.value.trim();
+  if (!text || document.getElementById('orelihSendBtn').disabled) return;
+  field.value = ''; autoResize(field);
+
+  appendOrelihMsg('user', text);
+  orelihHistory.push({ role:'user', content: text });
+  document.getElementById('orelihSendBtn').disabled = true;
+
+  const typingId = 'oreliTray-t-' + Date.now();
+  appendOrelihMsg('typing', '', typingId);
+
+  // Build dashboard context
+  const ctx = `[Student is on the Scholar Dashboard. Streak: ${document.getElementById('streakCount')?.textContent||'?'}, Cards reviewed: ${document.getElementById('cardsCount')?.textContent||'?'}]`;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        question  : ctx + '\n\n' + text,
+        session_id: state.sessionId,
+        history   : orelihHistory.slice(-6),
+        socratic  : false,
+        namespace : state.activeNamespaces[0]?.namespace || 'campbell-biology-cohere',
+      }),
+    });
+    removeOrelihTyping(typingId);
+    const data = await res.json();
+    appendOrelihMsg('ai', data.response);
+    orelihHistory.push({ role:'assistant', content: data.response });
+  } catch(e) {
+    removeOrelihTyping(typingId);
+    appendOrelihMsg('ai', 'Error: ' + e.message);
+  } finally {
+    document.getElementById('orelihSendBtn').disabled = false;
+  }
+}
+
+function appendOrelihMsg(role, text, id) {
+  const container = document.getElementById('orelihTrayMsgs');
+  const wrap = document.createElement('div');
+  if (id) wrap.id = id;
+  if (role === 'typing') {
+    wrap.innerHTML = '<div class="fc-typing"><span></span><span></span><span></span></div>';
+  } else if (role === 'user') {
+    wrap.className = 'fc-msg-user';
+    const b = document.createElement('div'); b.className='fc-bubble'; b.textContent=text;
+    wrap.appendChild(b);
+  } else {
+    wrap.className = 'fc-msg-ai';
+    const b = document.createElement('div'); b.className='fc-bubble md-body';
+    b.innerHTML = parseMarkdown(text);
+    if (window.Prism) Prism.highlightAllUnder(b);
+    wrap.appendChild(b);
+  }
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+}
+function removeOrelihTyping(id) { document.getElementById(id)?.remove(); }
+function handleOrelihKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendOrelihMsg();} }
+
+/* ═══════════════════════════════════════════════════════
+   RESIZABLE SPLIT PANE — drag handle
+═══════════════════════════════════════════════════════ */
+(function initDragHandle() {
+  const MIN_PCT = 25, MAX_PCT = 75;
+  let dragging = false;
+
+  function applySplit(pct) {
+    const clamped = Math.max(MIN_PCT, Math.min(MAX_PCT, pct));
+    const deck = document.getElementById('fcDeckPane');
+    const chat = document.getElementById('fcChatPane');
+    if (deck) { deck.style.flex = `0 0 ${clamped}%`; deck.style.maxWidth = `${clamped}%`; }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const handle = document.getElementById('fcDragHandle');
+    if (!handle) return;
+
+    handle.addEventListener('mousedown', (e) => {
+      dragging = true;
+      handle.classList.add('dragging');
+      const sp = handle.closest('.fc-split');
+      if (sp) sp.classList.add('is-dragging');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const sp   = handle.closest('.fc-split');
+      if (!sp) return;
+      const rect = sp.getBoundingClientRect();
+      const pct  = ((e.clientX - rect.left) / rect.width) * 100;
+      applySplit(pct);
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove('dragging');
+      const sp = handle.closest('.fc-split');
+      if (sp) sp.classList.remove('is-dragging');
+    });
+  });
+})();
+</script>
+<!-- Left-edge zone at body level — above all fixed stacking contexts -->
+<div id="leftEdgeZone" onmouseenter="ncLeftEdgeEnter()" onmouseleave="ncLeftEdgeLeave()"></div>
+</body>
+</html>
